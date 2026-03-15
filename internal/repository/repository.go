@@ -73,6 +73,70 @@ type WiringRepository interface {
 
 /////////////////////////////////////////////////////////////////////////
 
+type ChargerSystemRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.ChargerSystem, error)
+	CreateTx(ctx context.Context, tx *sqlx.Tx, cs *domain.ChargerSystem) (int64, error)
+	Update(ctx context.Context, cs *domain.ChargerSystem) error
+	Delete(ctx context.Context, id int64) error
+}
+
+
+type ChargerRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Charger, error)
+	Create(ctx context.Context, c *domain.Charger) (int64, error)
+	Update(ctx context.Context, c *domain.Charger) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Charger, error)
+}
+
+
+type ConnectorRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Connector, error)
+	Create(ctx context.Context, c *domain.Connector) (int64, error)
+	Update(ctx context.Context, c *domain.Connector) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Connector, error)
+}
+
+//////////////////////////////////////////////////////////////////////
+
+
+type ChassisRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Chassis, error)
+	CreateTx(ctx context.Context, tx *sqlx.Tx, c *domain.Chassis) (int64, error)
+	Update(ctx context.Context, c *domain.Chassis) error
+	Delete(ctx context.Context, id int64) error
+}
+
+
+type FrameRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Frame, error)
+	Create(ctx context.Context, f *domain.Frame) (int64, error)
+	Update(ctx context.Context, f *domain.Frame) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Frame, error)
+}
+
+
+type SuspensionRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.Suspension, error)
+	Create(ctx context.Context, s *domain.Suspension) (int64, error)
+	Update(ctx context.Context, s *domain.Suspension) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.Suspension, error)
+}
+
+ 
+type BreakSystemRepository interface {
+	GetByID(ctx context.Context, id int64) (*domain.BreakSystem, error)
+	Create(ctx context.Context, b *domain.BreakSystem) (int64, error)
+	Update(ctx context.Context, b *domain.BreakSystem) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context) ([]*domain.BreakSystem, error)
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 type Repository struct {
 	Emobile       EmobileRepository
 	Body          BodyRepository
@@ -91,6 +155,15 @@ type Repository struct {
 	Controller ControllerRepository
 	Sensor     SensorRepository
 	Wiring     WiringRepository
+
+	// charger system
+	Charger   ChargerRepository
+	Connector ConnectorRepository
+
+	// chassis
+	Frame        FrameRepository
+	Suspension   SuspensionRepository
+	BreakSystem  BreakSystemRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -112,5 +185,14 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Controller: NewControllerPostgres(db),
 		Sensor:     NewSensorPostgres(db),
 		Wiring:     NewWiringPostgres(db),
+
+		// charger_system
+		Charger:   NewChargerPostgres(db),
+		Connector: NewConnectorPostgres(db),
+
+		// chassis
+		Frame:        NewFramePostgres(db),
+		Suspension:   NewSuspensionPostgres(db),
+		BreakSystem:  NewBreakSystemPostgres(db),
 	}
 }
