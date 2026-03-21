@@ -3,8 +3,8 @@ package domain
 type PowerPoint struct {
 	ID         int64 `json:"power_point_id" db:"power_point_id"`
 	EngineID   int64 `json:"engine_id"        db:"engine_id"`
-	InverterID int64 `json:inverter_id" 		db:"inverter_id"`
-	GearboxID  int64 `json:"gearbox_id" 		db:"gearbox_id"`
+	InverterID int64 `json:"inverter_id" db:"inverter_id"`
+	GearboxID  int64 `json:"gearbox_id" db:"gearbox_id"`
 }
 
 type Engine struct {
@@ -25,4 +25,3 @@ type Gearbox struct {
 	GearboxName string `json:"gearbox_name" db:"gearbox_name"`
 	GearboxInfo string `json:"gearbox_info" db:"gearbox_info"`
 }
-
