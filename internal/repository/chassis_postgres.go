@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ChassisPostgres 
+// ChassisPostgres
 type ChassisPostgres struct {
 	db *sqlx.DB
 }
@@ -17,7 +17,7 @@ func NewChassisPostgres(db *sqlx.DB) *ChassisPostgres {
 	return &ChassisPostgres{db: db}
 }
 
-func (r *ChassisPostgres) GetByID(ctx context.Context, id int64) (*domain.Chassis, error) {
+func (r *ChassisPostgres) GetByID(ctx context.Context, id string) (*domain.Chassis, error) {
 	var c domain.Chassis
 	err := r.db.GetContext(ctx, &c,
 		`SELECT * FROM chassis WHERE chassis_id = $1`, id,
@@ -28,8 +28,8 @@ func (r *ChassisPostgres) GetByID(ctx context.Context, id int64) (*domain.Chassi
 	return &c, nil
 }
 
-func (r *ChassisPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, c *domain.Chassis) (int64, error) {
-	var chassisID int64
+func (r *ChassisPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, c *domain.Chassis) (string, error) {
+	var chassisID string
 	err := tx.QueryRowContext(ctx,
 		`INSERT INTO chassis (frame_id, suspension_id, break_system_id)
 		 VALUES ($1, $2, $3) RETURNING chassis_id`,
@@ -46,15 +46,14 @@ func (r *ChassisPostgres) Update(ctx context.Context, c *domain.Chassis) error {
 	return err
 }
 
-func (r *ChassisPostgres) Delete(ctx context.Context, id int64) error {
+func (r *ChassisPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM chassis WHERE chassis_id = $1`, id,
 	)
 	return err
 }
 
-
-// FramePostgres 
+// FramePostgres
 type FramePostgres struct {
 	db *sqlx.DB
 }
@@ -63,7 +62,7 @@ func NewFramePostgres(db *sqlx.DB) *FramePostgres {
 	return &FramePostgres{db: db}
 }
 
-func (r *FramePostgres) GetByID(ctx context.Context, id int64) (*domain.Frame, error) {
+func (r *FramePostgres) GetByID(ctx context.Context, id string) (*domain.Frame, error) {
 	var f domain.Frame
 	err := r.db.GetContext(ctx, &f,
 		`SELECT * FROM frame WHERE frame_id = $1`, id,
@@ -74,8 +73,8 @@ func (r *FramePostgres) GetByID(ctx context.Context, id int64) (*domain.Frame, e
 	return &f, nil
 }
 
-func (r *FramePostgres) Create(ctx context.Context, f *domain.Frame) (int64, error) {
-	var id int64
+func (r *FramePostgres) Create(ctx context.Context, f *domain.Frame) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO frame (frame_name, frame_info)
 		 VALUES ($1, $2) RETURNING frame_id`,
@@ -92,7 +91,7 @@ func (r *FramePostgres) Update(ctx context.Context, f *domain.Frame) error {
 	return err
 }
 
-func (r *FramePostgres) Delete(ctx context.Context, id int64) error {
+func (r *FramePostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM frame WHERE frame_id = $1`, id,
 	)
@@ -112,8 +111,7 @@ func (r *FramePostgres) List(ctx context.Context) ([]*domain.Frame, error) {
 	return result, nil
 }
 
-
-// SuspensionPostgres 
+// SuspensionPostgres
 type SuspensionPostgres struct {
 	db *sqlx.DB
 }
@@ -122,7 +120,7 @@ func NewSuspensionPostgres(db *sqlx.DB) *SuspensionPostgres {
 	return &SuspensionPostgres{db: db}
 }
 
-func (r *SuspensionPostgres) GetByID(ctx context.Context, id int64) (*domain.Suspension, error) {
+func (r *SuspensionPostgres) GetByID(ctx context.Context, id string) (*domain.Suspension, error) {
 	var s domain.Suspension
 	err := r.db.GetContext(ctx, &s,
 		`SELECT * FROM suspension WHERE suspension_id = $1`, id,
@@ -133,8 +131,8 @@ func (r *SuspensionPostgres) GetByID(ctx context.Context, id int64) (*domain.Sus
 	return &s, nil
 }
 
-func (r *SuspensionPostgres) Create(ctx context.Context, s *domain.Suspension) (int64, error) {
-	var id int64
+func (r *SuspensionPostgres) Create(ctx context.Context, s *domain.Suspension) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO suspension (suspension_name, suspension_info)
 		 VALUES ($1, $2) RETURNING suspension_id`,
@@ -151,7 +149,7 @@ func (r *SuspensionPostgres) Update(ctx context.Context, s *domain.Suspension) e
 	return err
 }
 
-func (r *SuspensionPostgres) Delete(ctx context.Context, id int64) error {
+func (r *SuspensionPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM suspension WHERE suspension_id = $1`, id,
 	)
@@ -171,8 +169,7 @@ func (r *SuspensionPostgres) List(ctx context.Context) ([]*domain.Suspension, er
 	return result, nil
 }
 
-
-// BreakSystemPostgres 
+// BreakSystemPostgres
 type BreakSystemPostgres struct {
 	db *sqlx.DB
 }
@@ -181,7 +178,7 @@ func NewBreakSystemPostgres(db *sqlx.DB) *BreakSystemPostgres {
 	return &BreakSystemPostgres{db: db}
 }
 
-func (r *BreakSystemPostgres) GetByID(ctx context.Context, id int64) (*domain.BreakSystem, error) {
+func (r *BreakSystemPostgres) GetByID(ctx context.Context, id string) (*domain.BreakSystem, error) {
 	var b domain.BreakSystem
 	err := r.db.GetContext(ctx, &b,
 		`SELECT * FROM break_system WHERE break_system_id = $1`, id,
@@ -192,8 +189,8 @@ func (r *BreakSystemPostgres) GetByID(ctx context.Context, id int64) (*domain.Br
 	return &b, nil
 }
 
-func (r *BreakSystemPostgres) Create(ctx context.Context, b *domain.BreakSystem) (int64, error) {
-	var id int64
+func (r *BreakSystemPostgres) Create(ctx context.Context, b *domain.BreakSystem) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO break_system (break_system_name, break_system_info)
 		 VALUES ($1, $2) RETURNING break_system_id`,
@@ -210,7 +207,7 @@ func (r *BreakSystemPostgres) Update(ctx context.Context, b *domain.BreakSystem)
 	return err
 }
 
-func (r *BreakSystemPostgres) Delete(ctx context.Context, id int64) error {
+func (r *BreakSystemPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM break_system WHERE break_system_id = $1`, id,
 	)

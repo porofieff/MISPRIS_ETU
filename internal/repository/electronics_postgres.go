@@ -16,7 +16,7 @@ func NewElectronicsPostgres(db *sqlx.DB) *ElectronicsPostgres {
 	return &ElectronicsPostgres{db: db}
 }
 
-func (r *ElectronicsPostgres) GetByID(ctx context.Context, id int64) (*domain.Electronics, error) {
+func (r *ElectronicsPostgres) GetByID(ctx context.Context, id string) (*domain.Electronics, error) {
 	var e domain.Electronics
 	if err := r.db.GetContext(ctx, &e,
 		`SELECT * FROM electronics WHERE electronics_id = $1`, id,
@@ -26,8 +26,8 @@ func (r *ElectronicsPostgres) GetByID(ctx context.Context, id int64) (*domain.El
 	return &e, nil
 }
 
-func (r *ElectronicsPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, e *domain.Electronics) (int64, error) {
-	var electronicsID int64
+func (r *ElectronicsPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, e *domain.Electronics) (string, error) {
+	var electronicsID string
 	err := tx.QueryRowContext(ctx,
 		`INSERT INTO electronics (controller_id, sensor_id, wiring_id)
          VALUES ($1, $2, $3) RETURNING electronics_id`,
@@ -44,7 +44,7 @@ func (r *ElectronicsPostgres) Update(ctx context.Context, e *domain.Electronics)
 	return err
 }
 
-func (r *ElectronicsPostgres) Delete(ctx context.Context, id int64) error {
+func (r *ElectronicsPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM electronics WHERE electronics_id = $1`, id,
 	)
@@ -59,7 +59,7 @@ func NewControllerPostgres(db *sqlx.DB) *ControllerPostgres {
 	return &ControllerPostgres{db: db}
 }
 
-func (r *ControllerPostgres) GetByID(ctx context.Context, id int64) (*domain.Controller, error) {
+func (r *ControllerPostgres) GetByID(ctx context.Context, id string) (*domain.Controller, error) {
 	var c domain.Controller
 	if err := r.db.GetContext(ctx, &c,
 		`SELECT * FROM controllers WHERE controller_id = $1`, id,
@@ -69,8 +69,8 @@ func (r *ControllerPostgres) GetByID(ctx context.Context, id int64) (*domain.Con
 	return &c, nil
 }
 
-func (r *ControllerPostgres) Create(ctx context.Context, c *domain.Controller) (int64, error) {
-	var id int64
+func (r *ControllerPostgres) Create(ctx context.Context, c *domain.Controller) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO controllers (controller_name, controller_info)
          VALUES ($1, $2) RETURNING controller_id`,
@@ -87,7 +87,7 @@ func (r *ControllerPostgres) Update(ctx context.Context, c *domain.Controller) e
 	return err
 }
 
-func (r *ControllerPostgres) Delete(ctx context.Context, id int64) error {
+func (r *ControllerPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM controllers WHERE controller_id = $1`, id,
 	)
@@ -114,7 +114,7 @@ func NewSensorPostgres(db *sqlx.DB) *SensorPostgres {
 	return &SensorPostgres{db: db}
 }
 
-func (r *SensorPostgres) GetByID(ctx context.Context, id int64) (*domain.Sensor, error) {
+func (r *SensorPostgres) GetByID(ctx context.Context, id string) (*domain.Sensor, error) {
 	var s domain.Sensor
 	if err := r.db.GetContext(ctx, &s,
 		`SELECT * FROM sensors WHERE sensor_id = $1`, id,
@@ -124,8 +124,8 @@ func (r *SensorPostgres) GetByID(ctx context.Context, id int64) (*domain.Sensor,
 	return &s, nil
 }
 
-func (r *SensorPostgres) Create(ctx context.Context, s *domain.Sensor) (int64, error) {
-	var id int64
+func (r *SensorPostgres) Create(ctx context.Context, s *domain.Sensor) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO sensors (sensor_name, sensor_info)
          VALUES ($1, $2) RETURNING sensor_id`,
@@ -142,7 +142,7 @@ func (r *SensorPostgres) Update(ctx context.Context, s *domain.Sensor) error {
 	return err
 }
 
-func (r *SensorPostgres) Delete(ctx context.Context, id int64) error {
+func (r *SensorPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM sensors WHERE sensor_id = $1`, id,
 	)
@@ -169,7 +169,7 @@ func NewWiringPostgres(db *sqlx.DB) *WiringPostgres {
 	return &WiringPostgres{db: db}
 }
 
-func (r *WiringPostgres) GetByID(ctx context.Context, id int64) (*domain.Wiring, error) {
+func (r *WiringPostgres) GetByID(ctx context.Context, id string) (*domain.Wiring, error) {
 	var w domain.Wiring
 	if err := r.db.GetContext(ctx, &w,
 		`SELECT * FROM wiring WHERE wiring_id = $1`, id,
@@ -179,8 +179,8 @@ func (r *WiringPostgres) GetByID(ctx context.Context, id int64) (*domain.Wiring,
 	return &w, nil
 }
 
-func (r *WiringPostgres) Create(ctx context.Context, w *domain.Wiring) (int64, error) {
-	var id int64
+func (r *WiringPostgres) Create(ctx context.Context, w *domain.Wiring) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO wiring (wiring_name, wiring_info)
          VALUES ($1, $2) RETURNING wiring_id`,
@@ -197,7 +197,7 @@ func (r *WiringPostgres) Update(ctx context.Context, w *domain.Wiring) error {
 	return err
 }
 
-func (r *WiringPostgres) Delete(ctx context.Context, id int64) error {
+func (r *WiringPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM wiring WHERE wiring_id = $1`, id,
 	)

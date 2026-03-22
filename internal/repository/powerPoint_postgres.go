@@ -18,7 +18,7 @@ func NewPowerPointPostgres(db *sqlx.DB) *PowerPointPostgres {
 	return &PowerPointPostgres{db: db}
 }
 
-func (r *PowerPointPostgres) GetByID(ctx context.Context, id int64) (*domain.PowerPoint, error) {
+func (r *PowerPointPostgres) GetByID(ctx context.Context, id string) (*domain.PowerPoint, error) {
 	var p domain.PowerPoint
 	query := `SELECT power_point_id, engine_id, inverter_id, gearbox_id
 	          FROM power_point WHERE power_point_id = $1`
@@ -29,8 +29,8 @@ func (r *PowerPointPostgres) GetByID(ctx context.Context, id int64) (*domain.Pow
 	return &p, nil
 }
 
-func (r *PowerPointPostgres) Create(ctx context.Context, p *domain.PowerPoint) (int64, error) {
-	var id int64
+func (r *PowerPointPostgres) Create(ctx context.Context, p *domain.PowerPoint) (string, error) {
+	var id string
 	query := `INSERT INTO power_point (engine_id, inverter_id, gearbox_id)
 	          VALUES ($1, $2, $3) RETURNING power_point_id`
 	err := r.db.QueryRowContext(ctx, query, p.EngineID, p.InverterID, p.GearboxID).Scan(&id)
@@ -45,7 +45,7 @@ func (r *PowerPointPostgres) Update(ctx context.Context, p *domain.PowerPoint) e
 	return err
 }
 
-func (r *PowerPointPostgres) Delete(ctx context.Context, id int64) error {
+func (r *PowerPointPostgres) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM power_point WHERE power_point_id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
@@ -75,7 +75,7 @@ func NewEnginePostgres(db *sqlx.DB) *EnginePostgres {
 	return &EnginePostgres{db: db}
 }
 
-func (r *EnginePostgres) GetByID(ctx context.Context, id int64) (*domain.Engine, error) {
+func (r *EnginePostgres) GetByID(ctx context.Context, id string) (*domain.Engine, error) {
 	var e domain.Engine
 	query := `SELECT engine_id, engine_name, engine_type, engine_info FROM engine WHERE engine_id = $1`
 	err := r.db.GetContext(ctx, &e, query, id)
@@ -85,8 +85,8 @@ func (r *EnginePostgres) GetByID(ctx context.Context, id int64) (*domain.Engine,
 	return &e, nil
 }
 
-func (r *EnginePostgres) Create(ctx context.Context, e *domain.Engine) (int64, error) {
-	var id int64
+func (r *EnginePostgres) Create(ctx context.Context, e *domain.Engine) (string, error) {
+	var id string
 	query := `INSERT INTO engine (engine_name, engine_type, engine_info) VALUES ($1, $2, $3) RETURNING engine_id`
 	err := r.db.QueryRowContext(ctx, query, e.EngineName, e.EngineType, e.EngineInfo).Scan(&id)
 	return id, err
@@ -98,7 +98,7 @@ func (r *EnginePostgres) Update(ctx context.Context, e *domain.Engine) error {
 	return err
 }
 
-func (r *EnginePostgres) Delete(ctx context.Context, id int64) error {
+func (r *EnginePostgres) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM engine WHERE engine_id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
@@ -128,7 +128,7 @@ func NewInverterPostgres(db *sqlx.DB) *InverterPostgres {
 	return &InverterPostgres{db: db}
 }
 
-func (r *InverterPostgres) GetByID(ctx context.Context, id int64) (*domain.Inverter, error) {
+func (r *InverterPostgres) GetByID(ctx context.Context, id string) (*domain.Inverter, error) {
 	var i domain.Inverter
 	query := `SELECT inverter_id, inverter_name, inverter_info FROM inverter WHERE inverter_id = $1`
 	err := r.db.GetContext(ctx, &i, query, id)
@@ -138,8 +138,8 @@ func (r *InverterPostgres) GetByID(ctx context.Context, id int64) (*domain.Inver
 	return &i, nil
 }
 
-func (r *InverterPostgres) Create(ctx context.Context, i *domain.Inverter) (int64, error) {
-	var id int64
+func (r *InverterPostgres) Create(ctx context.Context, i *domain.Inverter) (string, error) {
+	var id string
 	query := `INSERT INTO inverter (inverter_name, inverter_info) VALUES ($1, $2) RETURNING inverter_id`
 	err := r.db.QueryRowContext(ctx, query, i.InverterName, i.InverterInfo).Scan(&id)
 	return id, err
@@ -151,7 +151,7 @@ func (r *InverterPostgres) Update(ctx context.Context, i *domain.Inverter) error
 	return err
 }
 
-func (r *InverterPostgres) Delete(ctx context.Context, id int64) error {
+func (r *InverterPostgres) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM inverter WHERE inverter_id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
@@ -181,7 +181,7 @@ func NewGearboxPostgres(db *sqlx.DB) *GearboxPostgres {
 	return &GearboxPostgres{db: db}
 }
 
-func (r *GearboxPostgres) GetByID(ctx context.Context, id int64) (*domain.Gearbox, error) {
+func (r *GearboxPostgres) GetByID(ctx context.Context, id string) (*domain.Gearbox, error) {
 	var g domain.Gearbox
 	query := `SELECT gearbox_id, gearbox_name, gearbox_info FROM gearbox WHERE gearbox_id = $1`
 	err := r.db.GetContext(ctx, &g, query, id)
@@ -191,8 +191,8 @@ func (r *GearboxPostgres) GetByID(ctx context.Context, id int64) (*domain.Gearbo
 	return &g, nil
 }
 
-func (r *GearboxPostgres) Create(ctx context.Context, g *domain.Gearbox) (int64, error) {
-	var id int64
+func (r *GearboxPostgres) Create(ctx context.Context, g *domain.Gearbox) (string, error) {
+	var id string
 	query := `INSERT INTO gearbox (gearbox_name, gearbox_info) VALUES ($1, $2) RETURNING gearbox_id`
 	err := r.db.QueryRowContext(ctx, query, g.GearboxName, g.GearboxInfo).Scan(&id)
 	return id, err
@@ -204,7 +204,7 @@ func (r *GearboxPostgres) Update(ctx context.Context, g *domain.Gearbox) error {
 	return err
 }
 
-func (r *GearboxPostgres) Delete(ctx context.Context, id int64) error {
+func (r *GearboxPostgres) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM gearbox WHERE gearbox_id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err

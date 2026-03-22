@@ -18,7 +18,7 @@ func NewEmobilePostgres(db *sqlx.DB) *EmobilePostgres {
 	}
 }
 
-func (r *EmobilePostgres) GetByID(ctx context.Context, id int64) (*domain.Emobile, error) {
+func (r *EmobilePostgres) GetByID(ctx context.Context, id string) (*domain.Emobile, error) {
 	var emobile domain.Emobile
 
 	if err := r.db.GetContext(ctx, &emobile,
@@ -29,8 +29,8 @@ func (r *EmobilePostgres) GetByID(ctx context.Context, id int64) (*domain.Emobil
 	return &emobile, nil
 }
 
-func (r *EmobilePostgres) Create(ctx context.Context, tx *sqlx.Tx, emobile *domain.Emobile) (int64, error) {
-	var emobileID int64
+func (r *EmobilePostgres) Create(ctx context.Context, tx *sqlx.Tx, emobile *domain.Emobile) (string, error) {
+	var emobileID string
 	err := tx.QueryRowContext(ctx, `INSERT INTO emobile (emobile_id, emobile_name,
                      power_point_id, battery_id, charger_system_id,
                      chassis_id, body_id, electronics_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING emobile_id`,
@@ -47,7 +47,7 @@ func (r *EmobilePostgres) Update(ctx context.Context, emobile *domain.Emobile) e
 	return err
 }
 
-func (r *EmobilePostgres) Delete(ctx context.Context, id int64) error {
+func (r *EmobilePostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM emobile WHERE emobile_id = $1`, id)
 	return err
 }

@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/lib/pq v1.11.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect

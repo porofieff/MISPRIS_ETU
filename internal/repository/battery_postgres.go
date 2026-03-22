@@ -16,7 +16,7 @@ func NewBatteryPostgres(db *sqlx.DB) *BatteryPostgres {
 	return &BatteryPostgres{db: db}
 }
 
-func (r *BatteryPostgres) GetByID(ctx context.Context, id int64) (*domain.Battery, error) {
+func (r *BatteryPostgres) GetByID(ctx context.Context, id string) (*domain.Battery, error) {
 	var b domain.Battery
 	query := `SELECT battery_id, battery_name, battery_type, battery_capacity, battery_info
 	          FROM battery WHERE battery_id = $1`
@@ -27,8 +27,8 @@ func (r *BatteryPostgres) GetByID(ctx context.Context, id int64) (*domain.Batter
 	return &b, nil
 }
 
-func (r *BatteryPostgres) Create(ctx context.Context, b *domain.Battery) (int64, error) {
-	var id int64
+func (r *BatteryPostgres) Create(ctx context.Context, b *domain.Battery) (string, error) {
+	var id string
 	query := `INSERT INTO battery (battery_name, battery_type, battery_capacity, battery_info)
 	          VALUES ($1, $2, $3, $4) RETURNING battery_id`
 	err := r.db.QueryRowContext(ctx, query,
@@ -47,7 +47,7 @@ func (r *BatteryPostgres) Update(ctx context.Context, b *domain.Battery) error {
 	return err
 }
 
-func (r *BatteryPostgres) Delete(ctx context.Context, id int64) error {
+func (r *BatteryPostgres) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM battery WHERE battery_id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err

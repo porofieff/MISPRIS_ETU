@@ -16,7 +16,7 @@ func NewBodyPostgres(db *sqlx.DB) *BodyPostgres {
 	return &BodyPostgres{db: db}
 }
 
-func (r *BodyPostgres) GetByID(ctx context.Context, id int64) (*domain.Body, error) {
+func (r *BodyPostgres) GetByID(ctx context.Context, id string) (*domain.Body, error) {
 	var b domain.Body
 	if err := r.db.GetContext(ctx, &b,
 		`SELECT * FROM body WHERE body_id = $1`, id,
@@ -26,8 +26,8 @@ func (r *BodyPostgres) GetByID(ctx context.Context, id int64) (*domain.Body, err
 	return &b, nil
 }
 
-func (r *BodyPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, b *domain.Body) (int64, error) {
-	var bodyID int64
+func (r *BodyPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, b *domain.Body) (string, error) {
+	var bodyID string
 	err := tx.QueryRowContext(ctx,
 		`INSERT INTO body (carcass_id, doors_id, wings_id)
          VALUES ($1, $2, $3) RETURNING body_id`,
@@ -44,7 +44,7 @@ func (r *BodyPostgres) Update(ctx context.Context, b *domain.Body) error {
 	return err
 }
 
-func (r *BodyPostgres) Delete(ctx context.Context, id int64) error {
+func (r *BodyPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM body WHERE body_id = $1`, id,
 	)
@@ -61,7 +61,7 @@ func NewCarcassPostgres(db *sqlx.DB) *CarcassPostgres {
 	return &CarcassPostgres{db: db}
 }
 
-func (r *CarcassPostgres) GetByID(ctx context.Context, id int64) (*domain.Carcass, error) {
+func (r *CarcassPostgres) GetByID(ctx context.Context, id string) (*domain.Carcass, error) {
 	var c domain.Carcass
 	if err := r.db.GetContext(ctx, &c,
 		`SELECT * FROM carcass WHERE carcass_id = $1`, id,
@@ -71,8 +71,8 @@ func (r *CarcassPostgres) GetByID(ctx context.Context, id int64) (*domain.Carcas
 	return &c, nil
 }
 
-func (r *CarcassPostgres) Create(ctx context.Context, c *domain.Carcass) (int64, error) {
-	var id int64
+func (r *CarcassPostgres) Create(ctx context.Context, c *domain.Carcass) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO carcass (carcass_name, carcass_info)
          VALUES ($1, $2) RETURNING carcass_id`,
@@ -89,7 +89,7 @@ func (r *CarcassPostgres) Update(ctx context.Context, c *domain.Carcass) error {
 	return err
 }
 
-func (r *CarcassPostgres) Delete(ctx context.Context, id int64) error {
+func (r *CarcassPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM carcass WHERE carcass_id = $1`, id,
 	)
@@ -118,7 +118,7 @@ func NewDoorsPostgres(db *sqlx.DB) *DoorsPostgres {
 	return &DoorsPostgres{db: db}
 }
 
-func (r *DoorsPostgres) GetByID(ctx context.Context, id int64) (*domain.Doors, error) {
+func (r *DoorsPostgres) GetByID(ctx context.Context, id string) (*domain.Doors, error) {
 	var d domain.Doors
 	if err := r.db.GetContext(ctx, &d,
 		`SELECT * FROM doors WHERE doors_id = $1`, id,
@@ -128,8 +128,8 @@ func (r *DoorsPostgres) GetByID(ctx context.Context, id int64) (*domain.Doors, e
 	return &d, nil
 }
 
-func (r *DoorsPostgres) Create(ctx context.Context, d *domain.Doors) (int64, error) {
-	var id int64
+func (r *DoorsPostgres) Create(ctx context.Context, d *domain.Doors) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO doors (doors_name, doors_info)
          VALUES ($1, $2) RETURNING doors_id`,
@@ -146,7 +146,7 @@ func (r *DoorsPostgres) Update(ctx context.Context, d *domain.Doors) error {
 	return err
 }
 
-func (r *DoorsPostgres) Delete(ctx context.Context, id int64) error {
+func (r *DoorsPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM doors WHERE doors_id = $1`, id,
 	)
@@ -174,7 +174,7 @@ func NewWingsPostgres(db *sqlx.DB) *WingsPostgres {
 	return &WingsPostgres{db: db}
 }
 
-func (r *WingsPostgres) GetByID(ctx context.Context, id int64) (*domain.Wings, error) {
+func (r *WingsPostgres) GetByID(ctx context.Context, id string) (*domain.Wings, error) {
 	var w domain.Wings
 	if err := r.db.GetContext(ctx, &w,
 		`SELECT * FROM wings WHERE wings_id = $1`, id,
@@ -184,8 +184,8 @@ func (r *WingsPostgres) GetByID(ctx context.Context, id int64) (*domain.Wings, e
 	return &w, nil
 }
 
-func (r *WingsPostgres) Create(ctx context.Context, w *domain.Wings) (int64, error) {
-	var id int64
+func (r *WingsPostgres) Create(ctx context.Context, w *domain.Wings) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO wings (wings_name, wings_info)
          VALUES ($1, $2) RETURNING wings_id`,
@@ -202,7 +202,7 @@ func (r *WingsPostgres) Update(ctx context.Context, w *domain.Wings) error {
 	return err
 }
 
-func (r *WingsPostgres) Delete(ctx context.Context, id int64) error {
+func (r *WingsPostgres) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`DELETE FROM wings WHERE wings_id = $1`, id,
 	)

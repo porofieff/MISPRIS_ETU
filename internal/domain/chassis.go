@@ -1,26 +1,26 @@
 package domain
 
 type Chassis struct {
-	ID            int64 `json:"chassis_id"      db:"chassis_id"`
-	FrameID       int64 `json:"frame_id"        db:"frame_id"`
-	SuspensionID  int64 `json:"suspension_id" db:"suspension_id"`
-	BreakSystemID int64 `json:"break_system_id" db:"break_system_id"`
+	ID            string `json:"chassis_id"      db:"chassis_id"`
+	FrameID       string `json:"frame_id"        db:"frame_id"`
+	SuspensionID  string `json:"suspension_id" db:"suspension_id"`
+	BreakSystemID string `json:"break_system_id" db:"break_system_id"`
 }
 
 type Frame struct {
-	ID   int64  `json:"frame_id"        db:"frame_id"`
+	ID   string `json:"frame_id"        db:"frame_id"`
 	Name string `json:"frame_name"      db:"frame_name"`
 	Info string `json:"frame_info"      db:"frame_info"`
 }
 
 type Suspension struct {
-	ID   int64  `json:"suspension_id"        db:"suspension_id"`
+	ID   string `json:"suspension_id"        db:"suspension_id"`
 	Name string `json:"suspension_name"      db:"suspension_name"`
 	Info string `json:"suspension_info"      db:"suspension_info"`
 }
 
 type BreakSystem struct {
-	ID   int64  `json:"break_system_id"        db:"break_system_id"`
+	ID   string `json:"break_system_id"        db:"break_system_id"`
 	Name string `json:"break_system_name"      db:"break_system_name"`
 	Info string `json:"break_system_info"      db:"break_system_info"`
 }
