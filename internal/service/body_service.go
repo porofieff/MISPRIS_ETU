@@ -28,12 +28,11 @@ func (s *CarcassServiceImpl) Create(ctx context.Context, name, info string) (str
 		Info:      info,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
 func (s *CarcassServiceImpl) Update(ctx context.Context, id, name, info string) error {
-	return s.repo.Update(ctx, &domain.Carcass{ID: id, Name: name, Info: info, UpdatedAt: time.Now(), DeletedAt: false})
+	return s.repo.Update(ctx, &domain.Carcass{ID: id, Name: name, Info: info, UpdatedAt: time.Now()})
 }
 
 func (s *CarcassServiceImpl) Delete(ctx context.Context, id string) error {
@@ -73,12 +72,11 @@ func (s *DoorsServiceImpl) Create(ctx context.Context, name, info string) (strin
 		Info:      info,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
 func (s *DoorsServiceImpl) Update(ctx context.Context, id, name, info string) error {
-	return s.repo.Update(ctx, &domain.Doors{ID: id, Name: name, Info: info, UpdatedAt: time.Now(), DeletedAt: false})
+	return s.repo.Update(ctx, &domain.Doors{ID: id, Name: name, Info: info, UpdatedAt: time.Now()})
 }
 
 func (s *DoorsServiceImpl) Delete(ctx context.Context, id string) error {
@@ -118,12 +116,11 @@ func (s *WingsServiceImpl) Create(ctx context.Context, name, info string) (strin
 		Info:      info,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
 func (s *WingsServiceImpl) Update(ctx context.Context, id, name, info string) error {
-	return s.repo.Update(ctx, &domain.Wings{ID: id, Name: name, Info: info, UpdatedAt: time.Now(), DeletedAt: false})
+	return s.repo.Update(ctx, &domain.Wings{ID: id, Name: name, Info: info, UpdatedAt: time.Now()})
 }
 
 func (s *WingsServiceImpl) Delete(ctx context.Context, id string) error {
@@ -194,7 +191,6 @@ func (s *BodyServiceImpl) Create(ctx context.Context, carcassID, doorsID, wingsI
 		WingsID:   wingsID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 	if err != nil {
 		return "", err
@@ -209,7 +205,6 @@ func (s *BodyServiceImpl) Update(ctx context.Context, id, carcassID, doorsID, wi
 		DoorsID:   doorsID,
 		WingsID:   wingsID,
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 

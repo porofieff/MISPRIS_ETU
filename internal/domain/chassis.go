@@ -3,10 +3,12 @@ package domain
 import "time"
 
 type Chassis struct {
-	ID            string `json:"chassis_id"      db:"chassis_id"`
-	FrameID       string `json:"frame_id"        db:"frame_id"`
-	SuspensionID  string `json:"suspension_id" db:"suspension_id"`
-	BreakSystemID string `json:"break_system_id" db:"break_system_id"`
+	ID            string    `json:"chassis_id"      db:"chassis_id"`
+	FrameID       string    `json:"frame_id"        db:"frame_id"`
+	SuspensionID  string    `json:"suspension_id" db:"suspension_id"`
+	BreakSystemID string    `json:"break_system_id" db:"break_system_id"`
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type Frame struct {

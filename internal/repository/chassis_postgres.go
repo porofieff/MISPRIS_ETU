@@ -53,6 +53,19 @@ func (r *ChassisPostgres) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+func (r *ChassisPostgres) List(ctx context.Context) ([]*domain.Chassis, error) {
+	var rows []domain.Chassis
+	err := r.db.SelectContext(ctx, &rows, `SELECT * FROM chassis`)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*domain.Chassis, len(rows))
+	for i := range rows {
+		result[i] = &rows[i]
+	}
+	return result, nil
+}
+
 // FramePostgres
 type FramePostgres struct {
 	db *sqlx.DB

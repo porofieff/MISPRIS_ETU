@@ -53,6 +53,19 @@ func (r *ChargerSystemPostgres) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+func (r *ChargerSystemPostgres) List(ctx context.Context) ([]*domain.ChargerSystem, error) {
+	var rows []domain.ChargerSystem
+	err := r.db.SelectContext(ctx, &rows, `SELECT * FROM charger_system`)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*domain.ChargerSystem, len(rows))
+	for i := range rows {
+		result[i] = &rows[i]
+	}
+	return result, nil
+}
+
 // ChargerPostgres
 type ChargerPostgres struct {
 	db *sqlx.DB

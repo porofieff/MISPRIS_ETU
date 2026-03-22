@@ -81,6 +81,7 @@ type ChargerSystemRepository interface {
 	CreateTx(ctx context.Context, tx *sqlx.Tx, cs *domain.ChargerSystem) (string, error)
 	Update(ctx context.Context, cs *domain.ChargerSystem) error
 	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]*domain.ChargerSystem, error)
 }
 
 type ChargerRepository interface {
@@ -106,6 +107,7 @@ type ChassisRepository interface {
 	CreateTx(ctx context.Context, tx *sqlx.Tx, c *domain.Chassis) (string, error)
 	Update(ctx context.Context, c *domain.Chassis) error
 	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]*domain.Chassis, error)
 }
 
 type FrameRepository interface {
@@ -144,7 +146,7 @@ type BatteryRepository interface {
 
 type PowerPointRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.PowerPoint, error)
-	Create(ctx context.Context, p *domain.PowerPoint) (string, error)
+	CreateTx(ctx context.Context, tx *sqlx.Tx, p *domain.PowerPoint) (string, error)
 	Update(ctx context.Context, p *domain.PowerPoint) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.PowerPoint, error)

@@ -28,12 +28,11 @@ func (s *ControllerServiceImpl) Create(ctx context.Context, controllerName, cont
 		Info:      controllerInfo,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
 func (s *ControllerServiceImpl) Update(ctx context.Context, id, controllerName, controllerInfo string) error {
-	return s.repo.Update(ctx, &domain.Controller{ID: id, Name: controllerName, Info: controllerInfo, UpdatedAt: time.Now(), DeletedAt: false})
+	return s.repo.Update(ctx, &domain.Controller{ID: id, Name: controllerName, Info: controllerInfo, UpdatedAt: time.Now()})
 }
 
 func (s *ControllerServiceImpl) Delete(ctx context.Context, controllerID string) error {
@@ -73,7 +72,6 @@ func (s *SensorServiceImpl) Create(ctx context.Context, sensorName, sensorInfo s
 		Info:      sensorInfo,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
@@ -83,7 +81,6 @@ func (s *SensorServiceImpl) Update(ctx context.Context, sensorID, sensorName, se
 		Name:      sensorName,
 		Info:      sensorInfo,
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
@@ -124,7 +121,6 @@ func (s *WiringServiceImpl) Create(ctx context.Context, wiringName, wiringInfo s
 		Info:      wiringInfo,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
@@ -134,7 +130,6 @@ func (s *WiringServiceImpl) Update(ctx context.Context, wiringID, wiringName, wi
 		Name:      wiringName,
 		Info:      wiringInfo,
 		UpdatedAt: time.Now(),
-		DeletedAt: false,
 	})
 }
 
@@ -206,7 +201,6 @@ func (s *ElectronicsServiceImpl) Create(ctx context.Context, wiringID, sensorID,
 		ControllerID: controllerID,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-		DeletedAt:    false,
 	})
 	if err != nil {
 		return "", err
@@ -221,7 +215,6 @@ func (s *ElectronicsServiceImpl) Update(ctx context.Context, id, wiringID, senso
 		SensorID:     sensorID,
 		ControllerID: controllerID,
 		UpdatedAt:    time.Now(),
-		DeletedAt:    false,
 	})
 }
 
