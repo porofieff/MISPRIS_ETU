@@ -27,16 +27,6 @@ func (r *BatteryPostgres) GetByID(ctx context.Context, id string) (*domain.Batte
 	return &b, nil
 }
 
-func (r *BatteryPostgres) Create(ctx context.Context, b *domain.Battery) (string, error) {
-	var id string
-	query := `INSERT INTO battery (battery_name, battery_type, battery_capacity, battery_info)
-	          VALUES ($1, $2, $3, $4) RETURNING battery_id`
-	err := r.db.QueryRowContext(ctx, query,
-		b.BatteryName, b.BatteryType, b.BatteryCapacity, b.BatteryInfo,
-	).Scan(&id)
-	return id, err
-}
-
 func (r *BatteryPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, b *domain.Battery) (string, error) {
 	var id string
 	query := `INSERT INTO battery (battery_name, battery_type, battery_capacity, battery_info)
@@ -76,4 +66,3 @@ func (r *BatteryPostgres) List(ctx context.Context) ([]*domain.Battery, error) {
 	}
 	return result, nil
 }
-
