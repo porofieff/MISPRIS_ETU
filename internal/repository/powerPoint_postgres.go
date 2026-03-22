@@ -29,11 +29,11 @@ func (r *PowerPointPostgres) GetByID(ctx context.Context, id string) (*domain.Po
 	return &p, nil
 }
 
-func (r *PowerPointPostgres) Create(ctx context.Context, p *domain.PowerPoint) (string, error) {
+func (r *PowerPointPostgres) CreateTx(ctx context.Context, tx *sqlx.Tx, p *domain.PowerPoint) (string, error) {
 	var id string
 	query := `INSERT INTO power_point (engine_id, inverter_id, gearbox_id)
 	          VALUES ($1, $2, $3) RETURNING power_point_id`
-	err := r.db.QueryRowContext(ctx, query, p.EngineID, p.InverterID, p.GearboxID).Scan(&id)
+	err := tx.QueryRowContext(ctx, query, p.EngineID, p.InverterID, p.GearboxID).Scan(&id)
 	return id, err
 }
 
