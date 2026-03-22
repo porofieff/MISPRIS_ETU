@@ -1,10 +1,11 @@
 package service
 
 import (
-	"context"
-
 	"MISPRIS/internal/domain"
 	"MISPRIS/internal/repository"
+	"context"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type EmobileService interface {
@@ -18,7 +19,6 @@ type EmobileService interface {
 }
 
 type BatteryService interface {
-	Create(ctx context.Context, name string, batteryType string, batteryCapacity string, batteryInfo string) (string, error)
 	Create(ctx context.Context, name string, batteryType string,
 		batteryCapacity string, batteryInfo string) (string, error)
 	Update(ctx context.Context, id string, name string, batteryType string, batteryCapacity string, batteryInfo string) error
@@ -113,30 +113,6 @@ type PowerPointService interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]domain.PowerPoint, error)
 	GetByID(ctx context.Context, id string) (*domain.PowerPoint, error)
-}
-
-type EngineService interface {
-	Create(ctx context.Context, name, engineType, info string) (string, error)
-	Update(ctx context.Context, id, name, engineType, info string) error
-	Delete(ctx context.Context, id string) error
-	List(ctx context.Context) ([]domain.Engine, error)
-	GetByID(ctx context.Context, id string) (*domain.Engine, error)
-}
-
-type InverterService interface {
-	Create(ctx context.Context, name, info string) (string, error)
-	Update(ctx context.Context, id, name, info string) error
-	Delete(ctx context.Context, id string) error
-	List(ctx context.Context) ([]domain.Inverter, error)
-	GetByID(ctx context.Context, id string) (*domain.Inverter, error)
-}
-
-type GearboxService interface {
-	Create(ctx context.Context, name, info string) (string, error)
-	Update(ctx context.Context, id, name, info string) error
-	Delete(ctx context.Context, id string) error
-	List(ctx context.Context) ([]domain.Gearbox, error)
-	GetByID(ctx context.Context, id string) (*domain.Gearbox, error)
 }
 
 type Service struct {
