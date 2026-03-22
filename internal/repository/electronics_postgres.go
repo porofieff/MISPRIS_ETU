@@ -51,6 +51,18 @@ func (r *ElectronicsPostgres) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+func (r *ElectronicsPostgres) List(ctx context.Context) ([]*domain.Electronics, error) {
+	var rows []domain.Electronics
+	if err := r.db.SelectContext(ctx, &rows, `SELECT * FROM electronics`); err != nil {
+		return nil, err
+	}
+	result := make([]*domain.Electronics, len(rows))
+	for i := range rows {
+		result[i] = &rows[i]
+	}
+	return result, nil
+}
+
 //controllers
 
 type ControllerPostgres struct{ db *sqlx.DB }

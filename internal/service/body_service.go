@@ -5,6 +5,7 @@ import (
 	"MISPRIS/internal/repository"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -22,14 +23,17 @@ func NewCarcassService(repo repository.CarcassRepository) *CarcassServiceImpl {
 
 func (s *CarcassServiceImpl) Create(ctx context.Context, name, info string) (string, error) {
 	return s.repo.Create(ctx, &domain.Carcass{
-		ID:   uuid.New().String(),
-		Name: name,
-		Info: info,
+		ID:        uuid.New().String(),
+		Name:      name,
+		Info:      info,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		DeletedAt: false,
 	})
 }
 
 func (s *CarcassServiceImpl) Update(ctx context.Context, id, name, info string) error {
-	return s.repo.Update(ctx, &domain.Carcass{ID: id, Name: name, Info: info})
+	return s.repo.Update(ctx, &domain.Carcass{ID: id, Name: name, Info: info, UpdatedAt: time.Now(), DeletedAt: false})
 }
 
 func (s *CarcassServiceImpl) Delete(ctx context.Context, id string) error {
@@ -64,14 +68,17 @@ func NewDoorsService(repo repository.DoorsRepository) *DoorsServiceImpl {
 
 func (s *DoorsServiceImpl) Create(ctx context.Context, name, info string) (string, error) {
 	return s.repo.Create(ctx, &domain.Doors{
-		ID:   uuid.New().String(),
-		Name: name,
-		Info: info,
+		ID:        uuid.New().String(),
+		Name:      name,
+		Info:      info,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		DeletedAt: false,
 	})
 }
 
 func (s *DoorsServiceImpl) Update(ctx context.Context, id, name, info string) error {
-	return s.repo.Update(ctx, &domain.Doors{ID: id, Name: name, Info: info})
+	return s.repo.Update(ctx, &domain.Doors{ID: id, Name: name, Info: info, UpdatedAt: time.Now(), DeletedAt: false})
 }
 
 func (s *DoorsServiceImpl) Delete(ctx context.Context, id string) error {
@@ -106,14 +113,17 @@ func NewWingsService(repo repository.WingsRepository) *WingsServiceImpl {
 
 func (s *WingsServiceImpl) Create(ctx context.Context, name, info string) (string, error) {
 	return s.repo.Create(ctx, &domain.Wings{
-		ID:   uuid.New().String(),
-		Name: name,
-		Info: info,
+		ID:        uuid.New().String(),
+		Name:      name,
+		Info:      info,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		DeletedAt: false,
 	})
 }
 
 func (s *WingsServiceImpl) Update(ctx context.Context, id, name, info string) error {
-	return s.repo.Update(ctx, &domain.Wings{ID: id, Name: name, Info: info})
+	return s.repo.Update(ctx, &domain.Wings{ID: id, Name: name, Info: info, UpdatedAt: time.Now(), DeletedAt: false})
 }
 
 func (s *WingsServiceImpl) Delete(ctx context.Context, id string) error {
@@ -178,9 +188,13 @@ func (s *BodyServiceImpl) Create(ctx context.Context, carcassID, doorsID, wingsI
 	}
 	defer tx.Rollback()
 	id, err := s.bodyRepo.CreateTx(ctx, tx, &domain.Body{
+		ID:        uuid.New().String(),
 		CarcassID: carcassID,
 		DoorsID:   doorsID,
 		WingsID:   wingsID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		DeletedAt: false,
 	})
 	if err != nil {
 		return "", err
@@ -194,6 +208,8 @@ func (s *BodyServiceImpl) Update(ctx context.Context, id, carcassID, doorsID, wi
 		CarcassID: carcassID,
 		DoorsID:   doorsID,
 		WingsID:   wingsID,
+		UpdatedAt: time.Now(),
+		DeletedAt: false,
 	})
 }
 

@@ -1,11 +1,10 @@
 package service
 
 import (
-	"MISPRIS/internal/domain"
-	"MISPRIS/internal/repository"
 	"context"
 
-	"github.com/jmoiron/sqlx"
+	"MISPRIS/internal/domain"
+	"MISPRIS/internal/repository"
 )
 
 type EmobileService interface {
@@ -19,9 +18,10 @@ type EmobileService interface {
 }
 
 type BatteryService interface {
+	Create(ctx context.Context, name string, batteryType string, batteryCapacity string, batteryInfo string) (string, error)
 	Create(ctx context.Context, name string, batteryType string,
 		batteryCapacity string, batteryInfo string) (string, error)
-	Update(ctx context.Context, id string, name string, batteryType string, batteryCapacity string, batteryInfo string) (string, error)
+	Update(ctx context.Context, id string, name string, batteryType string, batteryCapacity string, batteryInfo string) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]domain.Battery, error)
 	GetByID(ctx context.Context, id string) (*domain.Battery, error)
@@ -115,6 +115,30 @@ type PowerPointService interface {
 	GetByID(ctx context.Context, id string) (*domain.PowerPoint, error)
 }
 
+type EngineService interface {
+	Create(ctx context.Context, name, engineType, info string) (string, error)
+	Update(ctx context.Context, id, name, engineType, info string) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.Engine, error)
+	GetByID(ctx context.Context, id string) (*domain.Engine, error)
+}
+
+type InverterService interface {
+	Create(ctx context.Context, name, info string) (string, error)
+	Update(ctx context.Context, id, name, info string) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.Inverter, error)
+	GetByID(ctx context.Context, id string) (*domain.Inverter, error)
+}
+
+type GearboxService interface {
+	Create(ctx context.Context, name, info string) (string, error)
+	Update(ctx context.Context, id, name, info string) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.Gearbox, error)
+	GetByID(ctx context.Context, id string) (*domain.Gearbox, error)
+}
+
 type Service struct {
 	PowerPoint PowerPointService
 	//////////////////////////////////////
@@ -137,20 +161,21 @@ type Service struct {
 	Body    BodyService
 }
 
-func NewService(db *sqlx.DB, repo *repository.Repository) Service {
+func NewService(db *sqlx.DB, repo *repository.Repository) *Service {
 
 	carcass := NewCarcassService(repo.Carcass)
 	doors := NewDoorsService(repo.Doors)
 	wings := NewWingsService(repo.Wings)
 
-	charger := NewChargerService(repo.Charger)
-	connector := NewConnectorService(repo.Connector)
-
-	frame := NewFrameService(repo.Frame)
-	suspension := NewSuspensionService(repo.Suspension)
-	break_system := NewBreakSystemService(repo.BreakSystem)
+	sensor := NewSensorService(repo.Sensor)
+	wiring := NewWiringService(repo.Wiring)
+	controller := NewControllerService(repo.Controller)
 
 	return &Service{
+		Sensor:      sensor,
+		Wiring:      wiring,
+		Controller:  controller,
+		Electronics: NewElectronicsService(db, repo.Electronics, wiring, controller, sensor),
 
 		Carcass: carcass,
 		Doors:   doors,
