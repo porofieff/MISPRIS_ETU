@@ -1,9 +1,10 @@
 package service
 
 import (
+	"context"
+
 	"MISPRIS/internal/domain"
 	"MISPRIS/internal/repository"
-	"context"
 )
 
 type EmobileService interface {
@@ -17,9 +18,8 @@ type EmobileService interface {
 }
 
 type BatteryService interface {
-	Create(ctx context.Context, id string, name string, batteryType string,
-		batteryCapacity string, batteryInfo string) (string, error)
-	Update(ctx context.Context, id string, name string, batteryType string, batteryCapacity float64, batteryInfo string) (string, error)
+	Create(ctx context.Context, name string, batteryType string, batteryCapacity string, batteryInfo string) (string, error)
+	Update(ctx context.Context, id string, name string, batteryType string, batteryCapacity string, batteryInfo string) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]domain.Battery, error)
 	GetByID(ctx context.Context, id string) (*domain.Battery, error)
@@ -58,11 +58,35 @@ type ElectronicsService interface {
 }
 
 type PowerPointService interface {
-	Create(ctx context.Context, id string, engineID, invertorID, gearboxID string) (string, error)
+	Create(ctx context.Context, engineID, invertorID, gearboxID string) (string, error)
 	Update(ctx context.Context, id string, engineID, invertorID, gearboxID string) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]domain.PowerPoint, error)
 	GetByID(ctx context.Context, id string) (*domain.PowerPoint, error)
+}
+
+type EngineService interface {
+	Create(ctx context.Context, name, engineType, info string) (string, error)
+	Update(ctx context.Context, id, name, engineType, info string) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.Engine, error)
+	GetByID(ctx context.Context, id string) (*domain.Engine, error)
+}
+
+type InverterService interface {
+	Create(ctx context.Context, name, info string) (string, error)
+	Update(ctx context.Context, id, name, info string) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.Inverter, error)
+	GetByID(ctx context.Context, id string) (*domain.Inverter, error)
+}
+
+type GearboxService interface {
+	Create(ctx context.Context, name, info string) (string, error)
+	Update(ctx context.Context, id, name, info string) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.Gearbox, error)
+	GetByID(ctx context.Context, id string) (*domain.Gearbox, error)
 }
 
 type Service struct {
@@ -73,6 +97,9 @@ type Service struct {
 	Battery     BatteryService
 	Emobile     EmobileService
 	Body        BodyService
+	Engine      EngineService
+	Inverter    InverterService
+	Gearbox     GearboxService
 }
 
 func NewService(repo *repository.Repository) Service {
@@ -84,5 +111,8 @@ func NewService(repo *repository.Repository) Service {
 		Battery:     NewBatteryService(repo.Battery),
 		Emobile:     NewEmobileService(repo.Emobile),
 		Body:        NewBodyService(repo.Body),
+		Engine:      NewEngineService(repo.Engine),
+		Inverter:    NewInverterService(repo.Inverter),
+		Gearbox:     NewGearboxService(repo.Gearbox),
 	}
 }
