@@ -3,21 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"MISPRIS/internal/schema"
+
 	"github.com/gin-gonic/gin"
 )
 
-type createEmobileInput struct {
-	Name            string `json:"name" binding:"required"`
-	PowerPointID    string `json:"power_point_id" binding:"required"`
-	BatteryID       string `json:"battery_id" binding:"required"`
-	ChargerSystemID string `json:"charger_system_id" binding:"required"`
-	ChassisID       string `json:"chassis_id" binding:"required"`
-	BodyID          string `json:"body_id" binding:"required"`
-	ElectronicsID   string `json:"electronics_id" binding:"required"`
-}
-
 func (h *Handler) CreateEmobile(c *gin.Context) {
-	var input createEmobileInput
+	var input schema.CreateEmobileInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -51,19 +43,9 @@ func (h *Handler) ListEmobiles(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-type updateEmobileInput struct {
-	Name            string `json:"name"`
-	PowerPointID    string `json:"power_point_id"`
-	BatteryID       string `json:"battery_id"`
-	ChargerSystemID string `json:"charger_system_id"`
-	ChassisID       string `json:"chassis_id"`
-	BodyID          string `json:"body_id"`
-	ElectronicsID   string `json:"electronics_id"`
-}
-
 func (h *Handler) UpdateEmobile(c *gin.Context) {
 	id := c.Param("id")
-	var input updateEmobileInput
+	var input schema.UpdateEmobileInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
