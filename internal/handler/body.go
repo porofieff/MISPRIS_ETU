@@ -3,17 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"MISPRIS/internal/schema"
+
 	"github.com/gin-gonic/gin"
 )
 
-type createBodyInput struct {
-	CarcassID string `json:"carcass_id" binding:"required"`
-	DoorsID   string `json:"doors_id" binding:"required"`
-	WingsID   string `json:"wings_id" binding:"required"`
-}
-
 func (h *Handler) CreateBody(c *gin.Context) {
-	var input createBodyInput
+	var input schema.CreateBodyInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -47,7 +43,7 @@ func (h *Handler) ListBodies(c *gin.Context) {
 
 func (h *Handler) UpdateBody(c *gin.Context) {
 	id := c.Param("id")
-	var input createBodyInput
+	var input schema.CreateBodyInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -69,13 +65,8 @@ func (h *Handler) DeleteBody(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createCarcassInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateCarcass(c *gin.Context) {
-	var input createCarcassInput
+	var input schema.CreateCarcassInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -109,7 +100,7 @@ func (h *Handler) ListCarcasses(c *gin.Context) {
 
 func (h *Handler) UpdateCarcass(c *gin.Context) {
 	id := c.Param("id")
-	var input createCarcassInput
+	var input schema.CreateCarcassInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -131,13 +122,8 @@ func (h *Handler) DeleteCarcass(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createDoorsInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateDoors(c *gin.Context) {
-	var input createDoorsInput
+	var input schema.CreateDoorsInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -171,7 +157,7 @@ func (h *Handler) ListDoors(c *gin.Context) {
 
 func (h *Handler) UpdateDoors(c *gin.Context) {
 	id := c.Param("id")
-	var input createDoorsInput
+	var input schema.CreateDoorsInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -193,13 +179,8 @@ func (h *Handler) DeleteDoors(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createWingsInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateWings(c *gin.Context) {
-	var input createWingsInput
+	var input schema.CreateWingsInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -233,7 +214,7 @@ func (h *Handler) ListWings(c *gin.Context) {
 
 func (h *Handler) UpdateWings(c *gin.Context) {
 	id := c.Param("id")
-	var input createWingsInput
+	var input schema.CreateWingsInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
