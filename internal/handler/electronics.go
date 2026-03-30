@@ -3,17 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"MISPRIS/internal/schema"
+
 	"github.com/gin-gonic/gin"
 )
 
-type createElectronicsInput struct {
-	ControllerID string `json:"controller_id" binding:"required"`
-	SensorID     string `json:"sensor_id" binding:"required"`
-	WiringID     string `json:"wiring_id" binding:"required"`
-}
-
 func (h *Handler) CreateElectronics(c *gin.Context) {
-	var input createElectronicsInput
+	var input schema.CreateElectronicsInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -47,7 +43,7 @@ func (h *Handler) ListElectronics(c *gin.Context) {
 
 func (h *Handler) UpdateElectronics(c *gin.Context) {
 	id := c.Param("id")
-	var input createElectronicsInput
+	var input schema.CreateElectronicsInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -69,13 +65,8 @@ func (h *Handler) DeleteElectronics(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createControllerInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateController(c *gin.Context) {
-	var input createControllerInput
+	var input schema.CreateControllerInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -109,7 +100,7 @@ func (h *Handler) ListControllers(c *gin.Context) {
 
 func (h *Handler) UpdateController(c *gin.Context) {
 	id := c.Param("id")
-	var input createControllerInput
+	var input schema.CreateControllerInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -131,13 +122,8 @@ func (h *Handler) DeleteController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createSensorInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateSensor(c *gin.Context) {
-	var input createSensorInput
+	var input schema.CreateSensorInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -171,7 +157,7 @@ func (h *Handler) ListSensors(c *gin.Context) {
 
 func (h *Handler) UpdateSensor(c *gin.Context) {
 	id := c.Param("id")
-	var input createSensorInput
+	var input schema.CreateSensorInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -193,13 +179,8 @@ func (h *Handler) DeleteSensor(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createWiringInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateWiring(c *gin.Context) {
-	var input createWiringInput
+	var input schema.CreateWiringInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -233,7 +214,7 @@ func (h *Handler) ListWirings(c *gin.Context) {
 
 func (h *Handler) UpdateWiring(c *gin.Context) {
 	id := c.Param("id")
-	var input createWiringInput
+	var input schema.CreateWiringInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
