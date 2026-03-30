@@ -21,29 +21,55 @@ function confirmDelete(id,categoryKey,name){
     };
 }
 
+// Строит один input/select/textarea по конфигу поля
+function buildFieldHtml(f, existingValue) {
+    const v = escapeHtml(existingValue || '');
+    if (f.type === 'textarea') {
+        return `<textarea id="_f_${f.id}" class="input-dark" rows="2">${v}</textarea>`;
+    }
+    if (f.type === 'select') {
+        const opts = f.options.map(o =>
+            `<option value="${escapeHtml(o)}" ${existingValue === o ? 'selected' : ''}>${escapeHtml(o)}</option>`
+        ).join('');
+        return `<select id="_f_${f.id}" class="input-dark">
+                    <option value="">— выберите —</option>${opts}
+                </select>`;
+    }
+    return `<input id="_f_${f.id}" type="${f.type}" class="input-dark" value="${v}" placeholder="${escapeHtml(f.label)}">`;
+}
+
 async function openPartForm(editId, categoryKey){
     if(!categoryKey){_openCategoryPicker();return;}
     const cat=getCatConfig(categoryKey);
     if(!cat) return;
     if(cat.composite){_openCompositeForm(cat,editId);return;}
+
     let existing={};
     if(editId){try{const l=await api[cat.key].list();existing=l.find(i=>i[cat.idField]===editId)||{};}catch(_){}}
+
     const fieldsHtml=cat.subFields.map(f=>{
-        const v=escapeHtml(existing[f.id]||existing[cat.nameField]||'');
-        const inp=f.type==='textarea'
-            ?`<textarea id="_f_${f.id}" class="input-dark" rows="2">${f.id==='name'?escapeHtml(existing[cat.nameField]||''):escapeHtml(existing[f.id]||'')}</textarea>`
-            :`<input id="_f_${f.id}" type="${f.type}" class="input-dark" value="${f.id==='name'?escapeHtml(existing[cat.nameField]||''):escapeHtml(existing[f.id]||'')}" placeholder="${escapeHtml(f.label)}">`;
-        return `<div class="form-group"><label>${escapeHtml(f.label)}</label>${inp}</div>`;
+        // поле 'name' на фронте — это nameField в БД (battery_name, engine_name и т.д.)
+        const val = f.id === 'name' ? (existing[cat.nameField]||'') : (existing[f.id]||'');
+        return `<div class="form-group"><label>${escapeHtml(f.label)}</label>${buildFieldHtml(f, val)}</div>`;
     }).join('');
+
     const m=createModal(`
-        <div class="modal-title"><i class="fas fa-${editId?'edit':'plus-circle'}" style="color:var(--accent)"></i> ${editId?'Редактировать':'Новая деталь'} — ${escapeHtml(cat.label)}</div>
+        <div class="modal-title"><i class="fas fa-${editId?'edit':'plus-circle'}" style="color:var(--accent)"></i>
+            ${editId?'Редактировать':'Новая деталь'} — ${escapeHtml(cat.label)}</div>
         ${fieldsHtml}
         <div id="_fe" class="text-danger" style="font-size:0.85rem;min-height:1.2em"></div>
-        <div class="modal-footer"><button class="btn btn-secondary" id="_cc">Отмена</button><button class="btn btn-primary" id="_ss"><i class="fas fa-save"></i> Сохранить</button></div>`);
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="_cc">Отмена</button>
+            <button class="btn btn-primary" id="_ss"><i class="fas fa-save"></i> Сохранить</button>
+        </div>`);
+
     m.querySelector('#_cc').onclick=()=>m.remove();
     m.querySelector('#_ss').onclick=async()=>{
         const payload={};
-        cat.subFields.forEach(f=>{const el=m.querySelector(`#_f_${f.id}`);payload[f.id]=el?el.value.trim():'';});
+        cat.subFields.forEach(f=>{
+            const el=m.querySelector(`#_f_${f.id}`);
+            payload[f.id]=el?el.value.trim():'';
+        });
         if(!payload['name']){m.querySelector('#_fe').textContent='Заполните название';return;}
         try{
             if(editId) await api[cat.key].update(editId,payload);
@@ -55,7 +81,8 @@ async function openPartForm(editId, categoryKey){
 
 function _openCategoryPicker(){
     const leaf=CATEGORY_MAP.filter(c=>!c.composite), comp=CATEGORY_MAP.filter(c=>c.composite);
-    const g=arr=>arr.map(c=>`<button class="btn btn-secondary _pc" data-key="${c.key}" style="text-align:left;justify-content:flex-start">${escapeHtml(c.label)}</button>`).join('');
+    const g=arr=>arr.map(c=>`<button class="btn btn-secondary _pc" data-key="${c.key}"
+        style="text-align:left;justify-content:flex-start">${escapeHtml(c.label)}</button>`).join('');
     const m=createModal(`
         <div class="modal-title"><i class="fas fa-list" style="color:var(--accent)"></i> Тип детали</div>
         <div class="section-label">Листовые</div>
@@ -67,31 +94,30 @@ function _openCategoryPicker(){
     m.querySelectorAll('._pc').forEach(b=>b.addEventListener('click',()=>{m.remove();openPartForm(null,b.dataset.key);}));
 }
 
-// Поля составных сущностей — используем реальные JSON-теги Go-схем
 const COMPOSITE_DEPS={
     powerPoints:[
-        {f:'engine_id',      c:'engines',      l:'Двигатель'},
-        {f:'inverter_id',    c:'inverters',    l:'Инвертор'},
-        {f:'gearbox_id',     c:'gearboxes',    l:'КПП'},
+        {f:'engine_id',       c:'engines',       l:'Двигатель'},
+        {f:'inverter_id',     c:'inverters',     l:'Инвертор'},
+        {f:'gearbox_id',      c:'gearboxes',     l:'КПП'},
     ],
     chassis:[
-        {f:'frame_id',       c:'frames',       l:'Рама'},
-        {f:'suspension_id',  c:'suspensions',  l:'Подвеска'},
-        {f:'break_system_id',c:'breakSystems', l:'Тормозная система'},
+        {f:'frame_id',        c:'frames',        l:'Рама'},
+        {f:'suspension_id',   c:'suspensions',   l:'Подвеска'},
+        {f:'break_system_id', c:'breakSystems',  l:'Тормозная система'},
     ],
     chargerSystems:[
-        {f:'charger_id',     c:'chargers',     l:'Зарядное устройство'},
-        {f:'connector_id',   c:'connectors',   l:'Коннектор'},
+        {f:'charger_id',      c:'chargers',      l:'Зарядное устройство'},
+        {f:'connector_id',    c:'connectors',    l:'Коннектор'},
     ],
     electronics:[
-        {f:'controller_id',  c:'controllers',  l:'Контроллер'},
-        {f:'sensor_id',      c:'sensors',      l:'Датчик'},
-        {f:'wiring_id',      c:'wirings',      l:'Проводка'},
+        {f:'controller_id',   c:'controllers',   l:'Контроллер'},
+        {f:'sensor_id',       c:'sensors',       l:'Датчик'},
+        {f:'wiring_id',       c:'wirings',       l:'Проводка'},
     ],
     bodies:[
-        {f:'carcass_id',     c:'carcasses',    l:'Каркас'},
-        {f:'doors_id',       c:'doors',        l:'Двери'},
-        {f:'wings_id',       c:'wings',        l:'Крылья'},
+        {f:'carcass_id',      c:'carcasses',     l:'Каркас'},
+        {f:'doors_id',        c:'doors',         l:'Двери'},
+        {f:'wings_id',        c:'wings',         l:'Крылья'},
     ],
     emobiles:[
         {f:'name',              c:null,            l:'Название'},
@@ -109,21 +135,39 @@ async function _openCompositeForm(cat,editId){
     const listsMap={};
     await Promise.all(deps.map(async dep=>{
         if(!dep.c) return;
-        try{listsMap[dep.f]=await api[dep.c].list();listsMap[`_c_${dep.f}`]=getCatConfig(dep.c);}catch(_){listsMap[dep.f]=[];}
+        try{listsMap[dep.f]=await api[dep.c].list();listsMap[`_c_${dep.f}`]=getCatConfig(dep.c);}
+        catch(_){listsMap[dep.f]=[];}
     }));
     let existing={};
     if(editId){try{const l=await api[cat.key].list();existing=l.find(i=>i[cat.idField]===editId)||{};}catch(_){}}
+
     const fieldsHtml=deps.map(dep=>{
-        if(!dep.c) return `<div class="form-group"><label>${escapeHtml(dep.l)}</label><input id="_f_${dep.f}" type="text" class="input-dark" value="${escapeHtml(existing[dep.f]||existing[cat.nameField]||'')}"></div>`;
+        if(!dep.c) {
+            const v = escapeHtml(existing[dep.f]||existing[cat.nameField]||'');
+            return `<div class="form-group"><label>${escapeHtml(dep.l)}</label>
+                    <input id="_f_${dep.f}" type="text" class="input-dark" value="${v}"></div>`;
+        }
         const items=listsMap[dep.f]||[], dc=listsMap[`_c_${dep.f}`];
-        const opts=items.map(i=>{const iId=i[dc.idField],iN=dc.nameField?i[dc.nameField]:`#${shortId(iId)}`;return `<option value="${escapeHtml(iId)}" ${existing[dep.f]==iId?'selected':''}>${escapeHtml(iN)}</option>`;}).join('');
-        return `<div class="form-group"><label>${escapeHtml(dep.l)}</label><select id="_f_${dep.f}" class="input-dark"><option value="">— выберите —</option>${opts}</select></div>${items.length===0?'<p class="text-muted" style="font-size:0.8rem">Список пуст — сначала создайте эту деталь.</p>':''}`;
+        const opts=items.map(i=>{
+            const iId=i[dc.idField], iN=dc.nameField?i[dc.nameField]:`#${shortId(iId)}`;
+            return `<option value="${escapeHtml(iId)}" ${existing[dep.f]==iId?'selected':''}>${escapeHtml(iN)}</option>`;
+        }).join('');
+        const empty = items.length===0 ? `<p class="text-muted" style="font-size:0.8rem;margin-top:0.25rem">Список пуст — сначала создайте эту деталь.</p>` : '';
+        return `<div class="form-group"><label>${escapeHtml(dep.l)}</label>
+                <select id="_f_${dep.f}" class="input-dark"><option value="">— выберите —</option>${opts}</select>
+                ${empty}</div>`;
     }).join('');
+
     const m=createModal(`
-        <div class="modal-title"><i class="fas fa-puzzle-piece" style="color:var(--accent)"></i> ${editId?'Редактировать':'Создать'} — ${escapeHtml(cat.label)}</div>
+        <div class="modal-title"><i class="fas fa-puzzle-piece" style="color:var(--accent)"></i>
+            ${editId?'Редактировать':'Создать'} — ${escapeHtml(cat.label)}</div>
         ${fieldsHtml}
         <div id="_fe" class="text-danger" style="font-size:0.85rem;min-height:1.2em"></div>
-        <div class="modal-footer"><button class="btn btn-secondary" id="_cc">Отмена</button><button class="btn btn-primary" id="_ss"><i class="fas fa-save"></i> Сохранить</button></div>`,true);
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="_cc">Отмена</button>
+            <button class="btn btn-primary" id="_ss"><i class="fas fa-save"></i> Сохранить</button>
+        </div>`,true);
+
     m.querySelector('#_cc').onclick=()=>m.remove();
     m.querySelector('#_ss').onclick=async()=>{
         const payload={};

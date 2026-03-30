@@ -1,3 +1,8 @@
+-- =====================================================
+-- MISPRIS — Migration UP
+-- Все *_info поля: TEXT (вместо JSONB)
+-- =====================================================
+
 CREATE TABLE users (
                        user_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        username    VARCHAR(100) UNIQUE NOT NULL,
@@ -9,262 +14,252 @@ CREATE TABLE users (
                        deleted_at  BOOLEAN DEFAULT FALSE
 );
 
-INSERT INTO users (username, password, role, is_active) VALUES ('daun', '$2b$10$FtD.voJMWrH4qqmjlJLwY.BF8fkw3vs7h8ngil/w063.Ks4UW3SZq', 'admin', true);
-INSERT INTO users (username, password, role, is_active) VALUES ('botik', '$2b$10$FtD.voJMWrH4qqmjlJLwY.BF8fkw3vs7h8ngil/w063.Ks4UW3SZq', 'user', true);
+INSERT INTO users (username, password, role, is_active) VALUES
+    ('daun',  '$2b$10$FtD.voJMWrH4qqmjlJLwY.BF8fkw3vs7h8ngil/w063.Ks4UW3SZq', 'admin', true);
+INSERT INTO users (username, password, role, is_active) VALUES
+    ('botik', '$2b$10$sVZMd2k9XYl141yn/noEWuMAxdjH4/bGBVyEn9pAW.U1AV3wi7hrO', 'user',  true);
 
+-- ── Двигатели ─────────────────────────────────────────
 CREATE TABLE engine (
                         engine_id    SERIAL PRIMARY KEY,
                         engine_name  VARCHAR(100) NOT NULL,
                         engine_type  VARCHAR(10) NOT NULL CHECK (engine_type IN ('AC', 'DC')),
-                        engine_info  JSONB,
+                        engine_info  TEXT,
                         created_at   TIMESTAMP DEFAULT NOW(),
                         updated_at   TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Инверторы ─────────────────────────────────────────
 CREATE TABLE inverter (
                           inverter_id    SERIAL PRIMARY KEY,
                           inverter_name  VARCHAR(100) NOT NULL,
-                          inverter_info  JSONB,
+                          inverter_info  TEXT,
                           created_at     TIMESTAMP DEFAULT NOW(),
                           updated_at     TIMESTAMP DEFAULT NOW()
 );
 
+-- ── КПП ───────────────────────────────────────────────
 CREATE TABLE gearbox (
                          gearbox_id    SERIAL PRIMARY KEY,
                          gearbox_name  VARCHAR(100) NOT NULL,
-                         gearbox_info  JSONB,
+                         gearbox_info  TEXT,
                          created_at    TIMESTAMP DEFAULT NOW(),
                          updated_at    TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Силовая установка ─────────────────────────────────
 CREATE TABLE power_point (
                              power_point_id  SERIAL PRIMARY KEY,
-                             engine_id       INT NOT NULL REFERENCES engine(engine_id) ON DELETE RESTRICT,
+                             engine_id       INT NOT NULL REFERENCES engine(engine_id)   ON DELETE RESTRICT,
                              inverter_id     INT NOT NULL REFERENCES inverter(inverter_id) ON DELETE RESTRICT,
-                             gearbox_id      INT NOT NULL REFERENCES gearbox(gearbox_id) ON DELETE RESTRICT,
+                             gearbox_id      INT NOT NULL REFERENCES gearbox(gearbox_id)  ON DELETE RESTRICT,
                              created_at      TIMESTAMP DEFAULT NOW(),
                              updated_at      TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Батарея ───────────────────────────────────────────
 CREATE TABLE battery (
                          battery_id       SERIAL PRIMARY KEY,
                          battery_name     VARCHAR(100) NOT NULL,
                          battery_type     VARCHAR(20) NOT NULL CHECK (battery_type IN ('Li-ion', 'Li-polymer')),
                          battery_capacity DECIMAL(10,2),
-                         battery_info     JSONB,
+                         battery_info     TEXT,
                          created_at       TIMESTAMP DEFAULT NOW(),
                          updated_at       TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Зарядное устройство ───────────────────────────────
 CREATE TABLE charger (
                          charger_id    SERIAL PRIMARY KEY,
                          charger_name  VARCHAR(100) NOT NULL,
-                         charger_info  JSONB,
+                         charger_info  TEXT,
                          created_at    TIMESTAMP DEFAULT NOW(),
                          updated_at    TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Коннектор ─────────────────────────────────────────
 CREATE TABLE connector (
                            connector_id    SERIAL PRIMARY KEY,
                            connector_name  VARCHAR(100) NOT NULL,
-                           connector_info  JSONB,
+                           connector_info  TEXT,
                            created_at      TIMESTAMP DEFAULT NOW(),
                            updated_at      TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Зарядная система ──────────────────────────────────
 CREATE TABLE charger_system (
                                 charger_system_id  SERIAL PRIMARY KEY,
-                                charger_id         INT NOT NULL REFERENCES charger(charger_id) ON DELETE RESTRICT,
-                                connector_id       INT NOT NULL REFERENCES connector(connector_id) ON DELETE RESTRICT,
+                                charger_id         INT NOT NULL REFERENCES charger(charger_id)     ON DELETE RESTRICT,
+                                connector_id       INT NOT NULL REFERENCES connector(connector_id)  ON DELETE RESTRICT,
                                 created_at         TIMESTAMP DEFAULT NOW(),
                                 updated_at         TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Рама ──────────────────────────────────────────────
 CREATE TABLE frame (
                        frame_id    SERIAL PRIMARY KEY,
                        frame_name  VARCHAR(100) NOT NULL,
-                       frame_info  JSONB,
+                       frame_info  TEXT,
                        created_at  TIMESTAMP DEFAULT NOW(),
                        updated_at  TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Подвеска ──────────────────────────────────────────
 CREATE TABLE suspension (
                             suspension_id    SERIAL PRIMARY KEY,
                             suspension_name  VARCHAR(100) NOT NULL,
-                            suspension_info  JSONB,
+                            suspension_info  TEXT,
                             created_at       TIMESTAMP DEFAULT NOW(),
                             updated_at       TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Тормозная система ─────────────────────────────────
 CREATE TABLE break_system (
                               break_system_id    SERIAL PRIMARY KEY,
                               break_system_name  VARCHAR(100) NOT NULL,
-                              break_info         JSONB,
+                              break_info         TEXT,
                               created_at         TIMESTAMP DEFAULT NOW(),
                               updated_at         TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Шасси ─────────────────────────────────────────────
 CREATE TABLE chassis (
                          chassis_id       SERIAL PRIMARY KEY,
-                         frame_id         INT NOT NULL REFERENCES frame(frame_id) ON DELETE RESTRICT,
-                         suspension_id    INT NOT NULL REFERENCES suspension(suspension_id) ON DELETE RESTRICT,
+                         frame_id         INT NOT NULL REFERENCES frame(frame_id)             ON DELETE RESTRICT,
+                         suspension_id    INT NOT NULL REFERENCES suspension(suspension_id)   ON DELETE RESTRICT,
                          break_system_id  INT NOT NULL REFERENCES break_system(break_system_id) ON DELETE RESTRICT,
                          created_at       TIMESTAMP DEFAULT NOW(),
                          updated_at       TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Каркас ────────────────────────────────────────────
 CREATE TABLE carcass (
                          carcass_id    SERIAL PRIMARY KEY,
                          carcass_name  VARCHAR(100) NOT NULL,
-                         carcass_info  JSONB,
+                         carcass_info  TEXT,
                          created_at    TIMESTAMP DEFAULT NOW(),
                          updated_at    TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Двери ─────────────────────────────────────────────
 CREATE TABLE doors (
                        doors_id    SERIAL PRIMARY KEY,
                        doors_name  VARCHAR(100) NOT NULL,
-                       doors_info  JSONB,
+                       doors_info  TEXT,
                        created_at  TIMESTAMP DEFAULT NOW(),
                        updated_at  TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Крылья ────────────────────────────────────────────
 CREATE TABLE wings (
                        wings_id    SERIAL PRIMARY KEY,
                        wings_name  VARCHAR(100) NOT NULL,
-                       wings_info  JSONB,
+                       wings_info  TEXT,
                        created_at  TIMESTAMP DEFAULT NOW(),
                        updated_at  TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Кузов ─────────────────────────────────────────────
 CREATE TABLE body (
                       body_id      SERIAL PRIMARY KEY,
                       carcass_id   INT NOT NULL REFERENCES carcass(carcass_id) ON DELETE RESTRICT,
-                      doors_id     INT NOT NULL REFERENCES doors(doors_id) ON DELETE RESTRICT,
-                      wings_id     INT NOT NULL REFERENCES wings(wings_id) ON DELETE RESTRICT,
+                      doors_id     INT NOT NULL REFERENCES doors(doors_id)     ON DELETE RESTRICT,
+                      wings_id     INT NOT NULL REFERENCES wings(wings_id)     ON DELETE RESTRICT,
                       created_at   TIMESTAMP DEFAULT NOW(),
                       updated_at   TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Контроллеры ───────────────────────────────────────
 CREATE TABLE controllers (
                              controller_id    SERIAL PRIMARY KEY,
                              controller_name  VARCHAR(100) NOT NULL,
-                             controller_info  JSONB,
+                             controller_info  TEXT,
                              created_at       TIMESTAMP DEFAULT NOW(),
                              updated_at       TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Датчики ───────────────────────────────────────────
 CREATE TABLE sensors (
                          sensor_id    SERIAL PRIMARY KEY,
                          sensor_name  VARCHAR(100) NOT NULL,
-                         sensor_info  JSONB,
+                         sensor_info  TEXT,
                          created_at   TIMESTAMP DEFAULT NOW(),
                          updated_at   TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Проводка ──────────────────────────────────────────
 CREATE TABLE wiring (
                         wiring_id    SERIAL PRIMARY KEY,
                         wiring_name  VARCHAR(100) NOT NULL,
-                        wiring_info  JSONB,
+                        wiring_info  TEXT,
                         created_at   TIMESTAMP DEFAULT NOW(),
                         updated_at   TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Электроника ───────────────────────────────────────
 CREATE TABLE electronics (
                              electronics_id  SERIAL PRIMARY KEY,
                              controller_id   INT NOT NULL REFERENCES controllers(controller_id) ON DELETE RESTRICT,
-                             sensor_id       INT NOT NULL REFERENCES sensors(sensor_id) ON DELETE RESTRICT,
-                             wiring_id       INT NOT NULL REFERENCES wiring(wiring_id) ON DELETE RESTRICT,
+                             sensor_id       INT NOT NULL REFERENCES sensors(sensor_id)         ON DELETE RESTRICT,
+                             wiring_id       INT NOT NULL REFERENCES wiring(wiring_id)          ON DELETE RESTRICT,
                              created_at      TIMESTAMP DEFAULT NOW(),
                              updated_at      TIMESTAMP DEFAULT NOW()
 );
 
+-- ── Электромобиль ─────────────────────────────────────
 CREATE TABLE emobile (
                          emobile_id         SERIAL PRIMARY KEY,
                          emobile_name       VARCHAR(100) NOT NULL,
-                         power_point_id     INT NOT NULL REFERENCES power_point(power_point_id) ON DELETE RESTRICT,
-                         battery_id         INT NOT NULL REFERENCES battery(battery_id) ON DELETE RESTRICT,
+                         power_point_id     INT NOT NULL REFERENCES power_point(power_point_id)       ON DELETE RESTRICT,
+                         battery_id         INT NOT NULL REFERENCES battery(battery_id)               ON DELETE RESTRICT,
                          charger_system_id  INT NOT NULL REFERENCES charger_system(charger_system_id) ON DELETE RESTRICT,
-                         chassis_id         INT NOT NULL REFERENCES chassis(chassis_id) ON DELETE RESTRICT,
-                         body_id            INT NOT NULL REFERENCES body(body_id) ON DELETE RESTRICT,
-                         electronics_id     INT NOT NULL REFERENCES electronics(electronics_id) ON DELETE RESTRICT,
+                         chassis_id         INT NOT NULL REFERENCES chassis(chassis_id)               ON DELETE RESTRICT,
+                         body_id            INT NOT NULL REFERENCES body(body_id)                     ON DELETE RESTRICT,
+                         electronics_id     INT NOT NULL REFERENCES electronics(electronics_id)       ON DELETE RESTRICT,
                          created_at         TIMESTAMP DEFAULT NOW(),
                          updated_at         TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_engine_info      ON engine     USING GIN (engine_info);
-CREATE INDEX idx_battery_info     ON battery    USING GIN (battery_info);
-CREATE INDEX idx_charger_info     ON charger    USING GIN (charger_info);
-
+-- ── Индексы ───────────────────────────────────────────
 CREATE INDEX idx_users_username ON users(username);
 
+-- ── Лог аудита ────────────────────────────────────────
 CREATE TABLE audit_log (
                            log_id      SERIAL PRIMARY KEY,
                            user_id     UUID REFERENCES users(user_id) ON DELETE SET NULL,
                            action      VARCHAR(10) NOT NULL CHECK (action IN ('CREATE', 'UPDATE', 'DELETE')),
-                           table_name  VARCHAR(100) NOT NULL,
-                           record_id   INT NOT NULL,
-                           old_data    JSONB,
-                           new_data    JSONB,
-                           created_at  TIMESTAMP DEFAULT NOW()
+    table_name  VARCHAR(100) NOT NULL,
+    record_id   INT NOT NULL,
+    old_data    JSONB,
+    new_data    JSONB,
+    created_at  TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_table    ON audit_log(table_name, record_id);
-CREATE INDEX idx_audit_user     ON audit_log(user_id);
-CREATE INDEX idx_audit_date     ON audit_log(created_at);
+CREATE INDEX idx_audit_table ON audit_log(table_name, record_id);
+CREATE INDEX idx_audit_user  ON audit_log(user_id);
+CREATE INDEX idx_audit_date  ON audit_log(created_at);
 
-
+-- ── Материализованное представление ───────────────────
 CREATE MATERIALIZED VIEW emobile_full AS
 SELECT
     e.emobile_id,
     e.emobile_name,
     e.created_at,
-
-    -- Силовая установка
-    eng.engine_name,
-    eng.engine_type,
-    eng.engine_info,
-    inv.inverter_name,
-    inv.inverter_info,
-    gb.gearbox_name,
-    gb.gearbox_info,
-
-    -- Батарея
-    b.battery_name,
-    b.battery_type,
-    b.battery_capacity,
-    b.battery_info,
-
-    -- Зарядная система
-    ch.charger_name,
-    ch.charger_info,
-    con.connector_name,
-    con.connector_info,
-
-    -- Шасси
-    fr.frame_name,
-    fr.frame_info,
-    sus.suspension_name,
-    sus.suspension_info,
-    br.break_system_name,
-    br.break_info,
-
-    -- Кузов
-    car.carcass_name,
-    car.carcass_info,
-    dr.doors_name,
-    dr.doors_info,
-    wi.wings_name,
-    wi.wings_info,
-
-    -- Электроника
-    ctrl.controller_name,
-    ctrl.controller_info,
-    sen.sensor_name,
-    sen.sensor_info,
-    wr.wiring_name,
-    wr.wiring_info
-
+    eng.engine_name,  eng.engine_type,   eng.engine_info,
+    inv.inverter_name, inv.inverter_info,
+    gb.gearbox_name,  gb.gearbox_info,
+    b.battery_name,   b.battery_type,    b.battery_capacity, b.battery_info,
+    ch.charger_name,  ch.charger_info,
+    con.connector_name, con.connector_info,
+    fr.frame_name,    fr.frame_info,
+    sus.suspension_name, sus.suspension_info,
+    br.break_system_name, br.break_info,
+    car.carcass_name, car.carcass_info,
+    dr.doors_name,    dr.doors_info,
+    wi.wings_name,    wi.wings_info,
+    ctrl.controller_name, ctrl.controller_info,
+    sen.sensor_name,  sen.sensor_info,
+    wr.wiring_name,   wr.wiring_info
 FROM emobile e
          JOIN power_point    pp   ON e.power_point_id    = pp.power_point_id
          JOIN engine         eng  ON pp.engine_id         = eng.engine_id
