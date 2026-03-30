@@ -3,17 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"MISPRIS/internal/schema"
+
 	"github.com/gin-gonic/gin"
 )
 
-type createPowerPointInput struct {
-	EngineID   string `json:"engine_id" binding:"required"`
-	InverterID string `json:"inverter_id" binding:"required"`
-	GearboxID  string `json:"gearbox_id" binding:"required"`
-}
-
 func (h *Handler) CreatePowerPoint(c *gin.Context) {
-	var input createPowerPointInput
+	var input schema.CreatePowerPointInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -47,7 +43,7 @@ func (h *Handler) ListPowerPoints(c *gin.Context) {
 
 func (h *Handler) UpdatePowerPoint(c *gin.Context) {
 	id := c.Param("id")
-	var input createPowerPointInput
+	var input schema.CreatePowerPointInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -69,14 +65,8 @@ func (h *Handler) DeletePowerPoint(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createEngineInput struct {
-	Name       string `json:"name" binding:"required"`
-	EngineType string `json:"engine_type"`
-	Info       string `json:"info"`
-}
-
 func (h *Handler) CreateEngine(c *gin.Context) {
-	var input createEngineInput
+	var input schema.CreateEngineInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -110,7 +100,7 @@ func (h *Handler) ListEngines(c *gin.Context) {
 
 func (h *Handler) UpdateEngine(c *gin.Context) {
 	id := c.Param("id")
-	var input createEngineInput
+	var input schema.CreateEngineInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -132,13 +122,8 @@ func (h *Handler) DeleteEngine(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createInverterInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateInverter(c *gin.Context) {
-	var input createInverterInput
+	var input schema.CreateInverterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -172,7 +157,7 @@ func (h *Handler) ListInverters(c *gin.Context) {
 
 func (h *Handler) UpdateInverter(c *gin.Context) {
 	id := c.Param("id")
-	var input createInverterInput
+	var input schema.CreateInverterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -194,13 +179,8 @@ func (h *Handler) DeleteInverter(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createGearboxInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateGearbox(c *gin.Context) {
-	var input createGearboxInput
+	var input schema.CreateGearboxInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -234,7 +214,7 @@ func (h *Handler) ListGearboxes(c *gin.Context) {
 
 func (h *Handler) UpdateGearbox(c *gin.Context) {
 	id := c.Param("id")
-	var input createGearboxInput
+	var input schema.CreateGearboxInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
