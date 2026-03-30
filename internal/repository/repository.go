@@ -186,6 +186,17 @@ type EmobileRepository interface {
 
 /////////////////////////////////////////////////////////////////////////
 
+type UserRepository interface {
+	Create(ctx context.Context, user *domain.User) (string, error)
+	GetByID(ctx context.Context, id string) (*domain.User, error)
+	GetByUsername(ctx context.Context, username string) (*domain.User, error)
+	Update(ctx context.Context, user *domain.User) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]*domain.User, error)
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 type Repository struct {
 	Emobile       EmobileRepository
 	Body          BodyRepository
@@ -218,6 +229,9 @@ type Repository struct {
 	Engine   EngineRepository
 	Inverter InverterRepository
 	Gearbox  GearboxRepository
+
+	// User
+	User UserRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -253,5 +267,8 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Engine:   NewEnginePostgres(db),
 		Inverter: NewInverterPostgres(db),
 		Gearbox:  NewGearboxPostgres(db),
+
+		//User
+		User: NewUserPostgres(db),
 	}
 }

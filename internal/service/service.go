@@ -178,6 +178,16 @@ type GearboxService interface {
 	GetByID(ctx context.Context, id string) (*domain.Gearbox, error)
 }
 
+type UserService interface {
+	Create(ctx context.Context, username, password, role string, IsActive bool) (string, error)
+	GetByID(ctx context.Context, id string) (*domain.User, error)
+	GetByUsername(ctx context.Context, username string) (*domain.User, error)
+	Update(ctx context.Context, id, username, password, role string, IsActive bool) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context) ([]domain.User, error)
+	Authenticate(ctx context.Context, username, password string) (*domain.User, error)
+}
+
 type Service struct {
 	PowerPoint PowerPointService
 	Engine     EngineService
@@ -208,6 +218,8 @@ type Service struct {
 	Wings   WingsService
 	Body    BodyService
 	///////////////////////////////////
+
+	User UserService
 }
 
 func NewService(db *sqlx.DB, repo *repository.Repository) *Service {
@@ -264,5 +276,7 @@ func NewService(db *sqlx.DB, repo *repository.Repository) *Service {
 			NewChassisService(db, repo.Chassis, frame, suspension, breakSystem),
 			NewBatteryService(repo.Battery, db),
 			NewPowerPointService(repo.PowerPoint, db, engine, inverter, gearbox)),
+
+		User: NewUserService(repo.User),
 	}
 }

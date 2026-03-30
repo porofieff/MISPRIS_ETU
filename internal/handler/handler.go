@@ -34,6 +34,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			auth.POST("/login", h.Login)
 		}
 
+		users := api.Group("/users")
+		{
+			users.GET("", h.ListUsers)
+			users.GET("/:id", h.GetUser)
+			users.POST("", h.CreateUser)
+			users.PUT("/:id", h.UpdateUser)
+			users.DELETE("/:id", h.DeleteUser)
+		}
+
 		emobile := api.Group("/emobile")
 		{
 			emobile.GET("", h.ListEmobiles)
