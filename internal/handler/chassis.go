@@ -3,17 +3,13 @@ package handler
 import (
 	"net/http"
 
+	"MISPRIS/internal/schema"
+
 	"github.com/gin-gonic/gin"
 )
 
-type createChassisInput struct {
-	FrameID       string `json:"frame_id" binding:"required"`
-	SuspensionID  string `json:"suspension_id" binding:"required"`
-	BreakSystemID string `json:"break_system_id" binding:"required"`
-}
-
 func (h *Handler) CreateChassis(c *gin.Context) {
-	var input createChassisInput
+	var input schema.CreateChassisInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -47,7 +43,7 @@ func (h *Handler) ListChassis(c *gin.Context) {
 
 func (h *Handler) UpdateChassis(c *gin.Context) {
 	id := c.Param("id")
-	var input createChassisInput
+	var input schema.CreateChassisInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -69,13 +65,8 @@ func (h *Handler) DeleteChassis(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createFrameInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateFrame(c *gin.Context) {
-	var input createFrameInput
+	var input schema.CreateFrameInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -109,7 +100,7 @@ func (h *Handler) ListFrames(c *gin.Context) {
 
 func (h *Handler) UpdateFrame(c *gin.Context) {
 	id := c.Param("id")
-	var input createFrameInput
+	var input schema.CreateFrameInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -131,13 +122,8 @@ func (h *Handler) DeleteFrame(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createSuspensionInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateSuspension(c *gin.Context) {
-	var input createSuspensionInput
+	var input schema.CreateSuspensionInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -171,7 +157,7 @@ func (h *Handler) ListSuspensions(c *gin.Context) {
 
 func (h *Handler) UpdateSuspension(c *gin.Context) {
 	id := c.Param("id")
-	var input createSuspensionInput
+	var input schema.CreateSuspensionInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -193,13 +179,8 @@ func (h *Handler) DeleteSuspension(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
-type createBreakSystemInput struct {
-	Name string `json:"name" binding:"required"`
-	Info string `json:"info"`
-}
-
 func (h *Handler) CreateBreakSystem(c *gin.Context) {
-	var input createBreakSystemInput
+	var input schema.CreateBreakSystemInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -233,7 +214,7 @@ func (h *Handler) ListBreakSystems(c *gin.Context) {
 
 func (h *Handler) UpdateBreakSystem(c *gin.Context) {
 	id := c.Param("id")
-	var input createBreakSystemInput
+	var input schema.CreateBreakSystemInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
