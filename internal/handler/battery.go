@@ -4,17 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"MISPRIS/internal/schema"
 )
 
-type createBatteryInput struct {
-	Name     string `json:"name" binding:"required"`
-	Type     string `json:"battery_type"`
-	Capacity string `json:"battery_capacity"`
-	Info     string `json:"battery_info"`
-}
-
 func (h *Handler) CreateBattery(c *gin.Context) {
-	var input createBatteryInput
+	var input schema.CreateBatteryInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -48,7 +43,7 @@ func (h *Handler) ListBatteries(c *gin.Context) {
 
 func (h *Handler) UpdateBattery(c *gin.Context) {
 	id := c.Param("id")
-	var input createBatteryInput
+	var input schema.CreateBatteryInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
