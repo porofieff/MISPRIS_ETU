@@ -1,0 +1,21 @@
+FROM golang:1.26 AS builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Путь к пакету Go, а не к .sql файлу
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/seed ./scripts/seed/main.go
+
+FROM alpine:latest
+
+WORKDIR /app
+
+RUN apk --no-cache add ca-certificates
+
+COPY --from=builder /bin/seed ./seed
+
+CMD ["./seed"]
