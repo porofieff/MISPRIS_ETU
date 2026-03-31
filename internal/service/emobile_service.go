@@ -96,6 +96,7 @@ func (s *EmobileServiceImpl) Update(ctx context.Context, id string, name string,
 	batteryID string, chargerSystemID string, chassisID string, bodyID string, electonicsID string) error {
 	return s.emobileRepo.Update(ctx, &domain.Emobile{
 		ID:              id,
+		Name:            name,
 		ChargerSystemID: chargerSystemID,
 		BodyID:          bodyID,
 		ElectronicsID:   electonicsID,

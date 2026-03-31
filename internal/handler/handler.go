@@ -79,7 +79,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			carcass.GET("list", h.ListCarcasses)
 			carcass.GET("/getCarcass:id", h.GetCarcass)
 			carcass.POST("create", h.CreateCarcass)
-			carcass.PUT("/updateCarcass:id", h.UpdateCarcass)
+			carcass.PUT("/update:id", h.UpdateCarcass)
 			carcass.DELETE("/delete:id", h.DeleteCarcass)
 		}
 		doors := api.Group("/doors")

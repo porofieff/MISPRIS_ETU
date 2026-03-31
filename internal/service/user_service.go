@@ -21,6 +21,7 @@ func NewUserService(repo repository.UserRepository) *UserServiceImpl {
 }
 
 func (s *UserServiceImpl) Create(ctx context.Context, username, password, role string, isActive bool) (string, error) {
+	isActive = true
 	existing, _ := s.repo.GetByUsername(ctx, username)
 	if existing != nil {
 		return "", errors.New("username already exists")

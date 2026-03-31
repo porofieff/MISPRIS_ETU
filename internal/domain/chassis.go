@@ -30,7 +30,7 @@ type Suspension struct {
 type BreakSystem struct {
 	ID        string    `json:"break_system_id"        db:"break_system_id"`
 	Name      string    `json:"break_system_name"      db:"break_system_name"`
-	Info      string    `json:"break_system_info"      db:"break_system_info"`
+	Info      string    `json:"break_system_info"      db:"break_info"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }

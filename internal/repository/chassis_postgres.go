@@ -205,7 +205,7 @@ func (r *BreakSystemPostgres) GetByID(ctx context.Context, id string) (*domain.B
 func (r *BreakSystemPostgres) Create(ctx context.Context, b *domain.BreakSystem) (string, error) {
 	var id string
 	err := r.db.QueryRowContext(ctx,
-		`INSERT INTO break_system (break_system_name, break_system_info)
+		`INSERT INTO break_system (break_system_name, break_info)
 		 VALUES ($1, $2) RETURNING break_system_id`,
 		b.Name, b.Info,
 	).Scan(&id)
@@ -214,7 +214,7 @@ func (r *BreakSystemPostgres) Create(ctx context.Context, b *domain.BreakSystem)
 
 func (r *BreakSystemPostgres) Update(ctx context.Context, b *domain.BreakSystem) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE break_system SET break_system_name=$1, break_system_info=$2 WHERE break_system_id=$3`,
+		`UPDATE break_system SET break_system_name=$1, break_info=$2 WHERE break_system_id=$3`,
 		b.Name, b.Info, b.ID,
 	)
 	return err
