@@ -8,6 +8,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// ── Существующие интерфейсы (без изменений) ──────────────────────
+
 type EmobileService interface {
 	Create(ctx context.Context, name string, powerPointID string,
 		batteryID string, charg_sysID string, chassisID string, bodyID string, electonicsID string) (string, error)
@@ -188,95 +190,149 @@ type UserService interface {
 	Authenticate(ctx context.Context, username, password string) (*domain.User, error)
 }
 
-type Service struct {
-	PowerPoint PowerPointService
-	Engine     EngineService
-	Inverter   InverterService
-	Gearbox    GearboxService
-	//////////////////////////////////////
-	Electronics ElectronicsService
-	Controller  ControllerService
-	Sensor      SensorService
-	Wiring      WiringService
-	//////////////////////////////////////////////
-	ChargerSystem ChargerSystemService
-	Charger       ChargerService
-	Connector     ConnectorService
-	////////////////////////////////////////////
-	Chassis     ChassisService
-	Frame       FrameService
-	Suspension  SuspensionService
-	BreakSystem BreakSystemService
-	/////////////////////////////////////////////
-	Battery BatteryService
-	/////////////////////////////////////////////
-	Emobile EmobileService
+// ── ПР2: Перечисления ─────────────────────────────────────────────
 
-	/////////////////////////////////
-	Carcass CarcassService
-	Doors   DoorsService
-	Wings   WingsService
-	Body    BodyService
-	///////////////////////////////////
-
-	User UserService
+type EnumClassService interface {
+	List(ctx context.Context) ([]*domain.EnumClass, error)
+	GetByID(ctx context.Context, id string) (*domain.EnumClass, error)
+	Create(ctx context.Context, name, componentType string) (string, error)
+	Update(ctx context.Context, id, name, componentType string) error
+	Delete(ctx context.Context, id string) error
+	GetValues(ctx context.Context, id string) ([]*domain.EnumPosition, error)
+	ValidateValue(ctx context.Context, enumClassID, value string) (bool, error)
 }
 
-func NewService(db *sqlx.DB, repo *repository.Repository) *Service {
-	frame := NewFrameService(repo.Frame)
-	suspension := NewSuspensionService(repo.Suspension)
-	breakSystem := NewBreakSystemService(repo.BreakSystem)
+type EnumPositionService interface {
+	List(ctx context.Context) ([]*domain.EnumPosition, error)
+	GetByID(ctx context.Context, id string) (*domain.EnumPosition, error)
+	Create(ctx context.Context, enumClassID, value, orderNum string) (string, error)
+	Update(ctx context.Context, id, value, orderNum string) error
+	Delete(ctx context.Context, id string) error
+}
 
-	charger := NewChargerService(repo.Charger)
-	connector := NewConnectorService(repo.Connector)
+// ── ПР3: Параметры ────────────────────────────────────────────────
 
-	carcass := NewCarcassService(repo.Carcass)
-	doors := NewDoorsService(repo.Doors)
-	wings := NewWingsService(repo.Wings)
+type ParameterService interface {
+	List(ctx context.Context) ([]*domain.Parameter, error)
+	GetByID(ctx context.Context, id string) (*domain.Parameter, error)
+	Create(ctx context.Context, designation, name, paramType, measuringUnit, enumClassID string) (string, error)
+	Update(ctx context.Context, id, designation, name, paramType, measuringUnit, enumClassID string) error
+	Delete(ctx context.Context, id string) error
+}
 
-	sensor := NewSensorService(repo.Sensor)
-	wiring := NewWiringService(repo.Wiring)
-	controller := NewControllerService(repo.Controller)
+type ComponentParameterService interface {
+	List(ctx context.Context) ([]*domain.ComponentParameter, error)
+	GetByID(ctx context.Context, id string) (*domain.ComponentParameter, error)
+	Create(ctx context.Context, componentType, parameterID, orderNum, minVal, maxVal string) (string, error)
+	Update(ctx context.Context, id, orderNum, minVal, maxVal string) error
+	Delete(ctx context.Context, id string) error
+	GetByType(ctx context.Context, componentType string) ([]*domain.ComponentParameterFull, error)
+	CopyFromType(ctx context.Context, fromType, toType string) error
+}
 
-	engine := NewEngineService(repo.Engine)
-	inverter := NewInverterService(repo.Inverter)
-	gearbox := NewGearboxService(repo.Gearbox)
+type EmobileParameterValueService interface {
+	List(ctx context.Context) ([]*domain.EmobileParameterValue, error)
+	GetByID(ctx context.Context, id string) (*domain.EmobileParameterValue, error)
+	Create(ctx context.Context, emobileID, componentParameterID, valReal, valInt, valStr, enumValID string) (string, error)
+	Update(ctx context.Context, id, valReal, valInt, valStr, enumValID string) error
+	Delete(ctx context.Context, id string) error
+	GetByEmobile(ctx context.Context, emobileID string) ([]*domain.EmobileParameterValue, error)
+}
+
+// ── Агрегирующий Service ──────────────────────────────────────────
+
+type Service struct {
+	PowerPoint   PowerPointService
+	Engine       EngineService
+	Inverter     InverterService
+	Gearbox      GearboxService
+	Electronics  ElectronicsService
+	Controller   ControllerService
+	Sensor       SensorService
+	Wiring       WiringService
+	ChargerSystem ChargerSystemService
+	Charger      ChargerService
+	Connector    ConnectorService
+	Chassis      ChassisService
+	Frame        FrameService
+	Suspension   SuspensionService
+	BreakSystem  BreakSystemService
+	Battery      BatteryService
+	Emobile      EmobileService
+	Carcass      CarcassService
+	Doors        DoorsService
+	Wings        WingsService
+	Body         BodyService
+	User         UserService
+
+	// ПР2
+	EnumClass    EnumClassService
+	EnumPosition EnumPositionService
+
+	// ПР3
+	Parameter              ParameterService
+	ComponentParameter     ComponentParameterService
+	EmobileParameterValue  EmobileParameterValueService
+}
+
+func NewService(db *sqlx.DB, repos *repository.Repository) *Service {
+	// ── Шаг 1: листовые сервисы (только репозиторий, без зависимостей) ──
+	engine      := NewEngineService(repos.Engine)
+	inverter    := NewInverterService(repos.Inverter)
+	gearbox     := NewGearboxService(repos.Gearbox)
+	controller  := NewControllerService(repos.Controller)
+	sensor      := NewSensorService(repos.Sensor)
+	wiring      := NewWiringService(repos.Wiring)
+	charger     := NewChargerService(repos.Charger)
+	connector   := NewConnectorService(repos.Connector)
+	frame       := NewFrameService(repos.Frame)
+	suspension  := NewSuspensionService(repos.Suspension)
+	breakSystem := NewBreakSystemService(repos.BreakSystem)
+	battery     := NewBatteryService(repos.Battery, db) // repo первым, затем db
+	carcass     := NewCarcassService(repos.Carcass)
+	doors       := NewDoorsService(repos.Doors)
+	wings       := NewWingsService(repos.Wings)
+	user        := NewUserService(repos.User)
+
+	// ── Шаг 2: составные сервисы (зависят от листовых + db) ─────────────
+	powerPoint    := NewPowerPointService(repos.PowerPoint, db, engine, inverter, gearbox)
+	electronics   := NewElectronicsService(db, repos.Electronics, wiring, controller, sensor)
+	chargerSystem := NewChargerSystemService(db, repos.ChargerSystem, charger, connector)
+	chassis       := NewChassisService(db, repos.Chassis, frame, suspension, breakSystem)
+	body          := NewBodyService(db, repos.Body, carcass, doors, wings)
+	emobile       := NewEmobileService(db, repos.Emobile, chargerSystem, body, electronics, chassis, battery, powerPoint)
 
 	return &Service{
+		PowerPoint:    powerPoint,
+		Engine:        engine,
+		Inverter:      inverter,
+		Gearbox:       gearbox,
+		Electronics:   electronics,
+		Controller:    controller,
+		Sensor:        sensor,
+		Wiring:        wiring,
+		ChargerSystem: chargerSystem,
 		Charger:       charger,
 		Connector:     connector,
-		ChargerSystem: NewChargerSystemService(db, repo.ChargerSystem, charger, connector),
+		Chassis:       chassis,
+		Frame:         frame,
+		Suspension:    suspension,
+		BreakSystem:   breakSystem,
+		Battery:       battery,
+		Emobile:       emobile,
+		Carcass:       carcass,
+		Doors:         doors,
+		Wings:         wings,
+		Body:          body,
+		User:          user,
 
-		Frame:       frame,
-		Suspension:  suspension,
-		BreakSystem: breakSystem,
-		Chassis:     NewChassisService(db, repo.Chassis, frame, suspension, breakSystem),
+		// ПР2
+		EnumClass:    NewEnumClassService(repos.EnumClass),
+		EnumPosition: NewEnumPositionService(repos.EnumPosition),
 
-		Sensor:      sensor,
-		Wiring:      wiring,
-		Controller:  controller,
-		Electronics: NewElectronicsService(db, repo.Electronics, wiring, controller, sensor),
-
-		Carcass: carcass,
-		Doors:   doors,
-		Wings:   wings,
-		Body:    NewBodyService(db, repo.Body, carcass, doors, wings),
-
-		Battery: NewBatteryService(repo.Battery, db),
-
-		Engine:     engine,
-		Inverter:   inverter,
-		Gearbox:    gearbox,
-		PowerPoint: NewPowerPointService(repo.PowerPoint, db, engine, inverter, gearbox),
-
-		Emobile: NewEmobileService(db, repo.Emobile,
-			NewChargerSystemService(db, repo.ChargerSystem, charger, connector),
-			NewBodyService(db, repo.Body, carcass, doors, wings),
-			NewElectronicsService(db, repo.Electronics, wiring, controller, sensor),
-			NewChassisService(db, repo.Chassis, frame, suspension, breakSystem),
-			NewBatteryService(repo.Battery, db),
-			NewPowerPointService(repo.PowerPoint, db, engine, inverter, gearbox)),
-
-		User: NewUserService(repo.User),
+		// ПР3
+		Parameter:             NewParameterService(repos.Parameter),
+		ComponentParameter:    NewComponentParameterService(repos.ComponentParameter),
+		EmobileParameterValue: NewEmobileParameterValueService(repos.EmobileParameterValue),
 	}
 }

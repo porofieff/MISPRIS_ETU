@@ -82,6 +82,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			carcass.PUT("/update:id", h.UpdateCarcass)
 			carcass.DELETE("/delete:id", h.DeleteCarcass)
 		}
+
 		doors := api.Group("/doors")
 		{
 			doors.GET("list", h.ListDoors)
@@ -90,6 +91,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			doors.PUT("/update:id", h.UpdateDoors)
 			doors.DELETE("/delete:id", h.DeleteDoors)
 		}
+
 		wings := api.Group("/wings")
 		{
 			wings.GET("list", h.ListWings)
@@ -116,6 +118,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			charger.PUT("/update:id", h.UpdateCharger)
 			charger.DELETE("/delete:id", h.DeleteCharger)
 		}
+
 		connector := api.Group("/connector")
 		{
 			connector.GET("list", h.ListConnectors)
@@ -142,6 +145,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			frame.PUT("/update:id", h.UpdateFrame)
 			frame.DELETE("/delete:id", h.DeleteFrame)
 		}
+
 		suspension := api.Group("/suspension")
 		{
 			suspension.GET("list", h.ListSuspensions)
@@ -150,6 +154,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			suspension.PUT("/update:id", h.UpdateSuspension)
 			suspension.DELETE("/delete:id", h.DeleteSuspension)
 		}
+
 		breakSystem := api.Group("/break-system")
 		{
 			breakSystem.GET("list", h.ListBreakSystems)
@@ -176,6 +181,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			controller.PUT("/update:id", h.UpdateController)
 			controller.DELETE("/delete:id", h.DeleteController)
 		}
+
 		sensor := api.Group("/sensor")
 		{
 			sensor.GET("list", h.ListSensors)
@@ -184,6 +190,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			sensor.PUT("/update:id", h.UpdateSensor)
 			sensor.DELETE("/delete:id", h.DeleteSensor)
 		}
+
 		wiring := api.Group("/wiring")
 		{
 			wiring.GET("list", h.ListWirings)
@@ -210,6 +217,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			engine.PUT("/update:id", h.UpdateEngine)
 			engine.DELETE("/delete:id", h.DeleteEngine)
 		}
+
 		inverter := api.Group("/inverter")
 		{
 			inverter.GET("list", h.ListInverters)
@@ -218,6 +226,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			inverter.PUT("/update:id", h.UpdateInverter)
 			inverter.DELETE("/delete:id", h.DeleteInverter)
 		}
+
 		gearbox := api.Group("/gearbox")
 		{
 			gearbox.GET("list", h.ListGearboxes)
@@ -225,6 +234,68 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			gearbox.POST("create", h.CreateGearbox)
 			gearbox.PUT("/update:id", h.UpdateGearbox)
 			gearbox.DELETE("/delete:id", h.DeleteGearbox)
+		}
+
+		// ── ПР2: Перечисления ────────────────────────────────────────────
+
+		enumClass := api.Group("/enum-class")
+		{
+			enumClass.GET("list", h.ListEnumClasses)
+			enumClass.GET("/getEnumClass:id", h.GetEnumClass)
+			enumClass.POST("create", h.CreateEnumClass)
+			enumClass.PUT("/update:id", h.UpdateEnumClass)
+			enumClass.DELETE("/delete:id", h.DeleteEnumClass)
+			// Специальные методы ПР2:
+			// Получить значения перечисления по порядку (SQL-функция get_enum_values)
+			enumClass.GET("/values:id", h.GetEnumClassValues)
+			// Проверить допустимость значения (SQL-функция validate_enum_value)
+			enumClass.POST("validate", h.ValidateEnumValue)
+		}
+
+		enumPosition := api.Group("/enum-position")
+		{
+			enumPosition.GET("list", h.ListEnumPositions)
+			enumPosition.GET("/getEnumPosition:id", h.GetEnumPosition)
+			enumPosition.POST("create", h.CreateEnumPosition)
+			enumPosition.PUT("/update:id", h.UpdateEnumPosition)
+			enumPosition.DELETE("/delete:id", h.DeleteEnumPosition)
+			// Изменить порядок позиции в перечислении
+			enumPosition.POST("/reorder:id", h.ReorderEnumPosition)
+		}
+
+		// ── ПР3: Параметры изделий ──────────────────────────────────────
+
+		parameter := api.Group("/parameter")
+		{
+			parameter.GET("list", h.ListParameters)
+			parameter.GET("/getParameter:id", h.GetParameter)
+			parameter.POST("create", h.CreateParameter)
+			parameter.PUT("/update:id", h.UpdateParameter)
+			parameter.DELETE("/delete:id", h.DeleteParameter)
+		}
+
+		componentParameter := api.Group("/component-parameter")
+		{
+			componentParameter.GET("list", h.ListComponentParameters)
+			componentParameter.GET("/getComponentParameter:id", h.GetComponentParameter)
+			componentParameter.POST("create", h.CreateComponentParameter)
+			componentParameter.PUT("/update:id", h.UpdateComponentParameter)
+			componentParameter.DELETE("/delete:id", h.DeleteComponentParameter)
+			// Параметры компонента по типу (SQL-функция get_component_parameters)
+			componentParameter.GET("/byType:type", h.GetComponentParametersByType)
+			// Скопировать параметры от одного типа к другому (SQL-процедура copy_component_parameters)
+			componentParameter.POST("copyFromType", h.CopyComponentParameters)
+		}
+
+		emobileParameter := api.Group("/emobile-parameter")
+		{
+			emobileParameter.GET("list", h.ListEmobileParameterValues)
+			emobileParameter.GET("/getEmobileParameter:id", h.GetEmobileParameterValue)
+			emobileParameter.POST("create", h.CreateEmobileParameterValue)
+			emobileParameter.PUT("/update:id", h.UpdateEmobileParameterValue)
+			emobileParameter.DELETE("/delete:id", h.DeleteEmobileParameterValue)
+			// Все значения параметров конкретного автомобиля
+			emobileParameter.GET("/byEmobile:id", h.GetEmobileParameterValuesByEmobile)
 		}
 	}
 

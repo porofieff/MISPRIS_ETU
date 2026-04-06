@@ -1,4 +1,4 @@
-/* api.js */
+/* api.js — полный файл с добавлением ПР2 и ПР3 */
 async function apiRequest(url,opts={}){
     let res;
     try{
@@ -31,4 +31,55 @@ api.users={
     list:  ()   =>apiRequest(`${API_BASE}/users/list`),
     create:data =>apiRequest(`${API_BASE}/users/create`,{method:'POST',body:JSON.stringify(data)}),
     delete:id   =>apiRequest(`${API_BASE}/users/delete${id}`,{method:'DELETE'}),
+};
+
+/* ── ПР2: Перечисления ──────────────────────────────────────── */
+api.enumClass={
+    list:    ()      =>apiRequest(`${API_BASE}/enum-class/list`),
+    getById: id      =>apiRequest(`${API_BASE}/enum-class/getEnumClass${id}`),
+    create:  data    =>apiRequest(`${API_BASE}/enum-class/create`,{method:'POST',body:JSON.stringify(data)}),
+    update:  (id,d)  =>apiRequest(`${API_BASE}/enum-class/update${id}`,{method:'PUT',body:JSON.stringify(d)}),
+    delete:  id      =>apiRequest(`${API_BASE}/enum-class/delete${id}`,{method:'DELETE'}),
+    // Получить значения в порядке order_num (SQL-функция get_enum_values)
+    getValues:  id   =>apiRequest(`${API_BASE}/enum-class/values${id}`),
+    // Проверить допустимость значения (SQL-функция validate_enum_value)
+    validate: data   =>apiRequest(`${API_BASE}/enum-class/validate`,{method:'POST',body:JSON.stringify(data)}),
+};
+api.enumPosition={
+    list:    ()      =>apiRequest(`${API_BASE}/enum-position/list`),
+    getById: id      =>apiRequest(`${API_BASE}/enum-position/getEnumPosition${id}`),
+    create:  data    =>apiRequest(`${API_BASE}/enum-position/create`,{method:'POST',body:JSON.stringify(data)}),
+    update:  (id,d)  =>apiRequest(`${API_BASE}/enum-position/update${id}`,{method:'PUT',body:JSON.stringify(d)}),
+    delete:  id      =>apiRequest(`${API_BASE}/enum-position/delete${id}`,{method:'DELETE'}),
+    // Изменить порядок позиции
+    reorder: (id,d)  =>apiRequest(`${API_BASE}/enum-position/reorder${id}`,{method:'POST',body:JSON.stringify(d)}),
+};
+
+/* ── ПР3: Параметры ─────────────────────────────────────────── */
+api.parameter={
+    list:    ()      =>apiRequest(`${API_BASE}/parameter/list`),
+    getById: id      =>apiRequest(`${API_BASE}/parameter/getParameter${id}`),
+    create:  data    =>apiRequest(`${API_BASE}/parameter/create`,{method:'POST',body:JSON.stringify(data)}),
+    update:  (id,d)  =>apiRequest(`${API_BASE}/parameter/update${id}`,{method:'PUT',body:JSON.stringify(d)}),
+    delete:  id      =>apiRequest(`${API_BASE}/parameter/delete${id}`,{method:'DELETE'}),
+};
+api.componentParameter={
+    list:    ()      =>apiRequest(`${API_BASE}/component-parameter/list`),
+    getById: id      =>apiRequest(`${API_BASE}/component-parameter/getComponentParameter${id}`),
+    create:  data    =>apiRequest(`${API_BASE}/component-parameter/create`,{method:'POST',body:JSON.stringify(data)}),
+    update:  (id,d)  =>apiRequest(`${API_BASE}/component-parameter/update${id}`,{method:'PUT',body:JSON.stringify(d)}),
+    delete:  id      =>apiRequest(`${API_BASE}/component-parameter/delete${id}`,{method:'DELETE'}),
+    // Получить параметры по типу компонента (SQL-функция get_component_parameters)
+    byType:  type    =>apiRequest(`${API_BASE}/component-parameter/byType${type}`),
+    // Скопировать параметры от одного типа к другому (SQL-процедура copy_component_parameters)
+    copyFromType: d  =>apiRequest(`${API_BASE}/component-parameter/copyFromType`,{method:'POST',body:JSON.stringify(d)}),
+};
+api.emobileParam={
+    list:    ()      =>apiRequest(`${API_BASE}/emobile-parameter/list`),
+    getById: id      =>apiRequest(`${API_BASE}/emobile-parameter/getEmobileParameter${id}`),
+    create:  data    =>apiRequest(`${API_BASE}/emobile-parameter/create`,{method:'POST',body:JSON.stringify(data)}),
+    update:  (id,d)  =>apiRequest(`${API_BASE}/emobile-parameter/update${id}`,{method:'PUT',body:JSON.stringify(d)}),
+    delete:  id      =>apiRequest(`${API_BASE}/emobile-parameter/delete${id}`,{method:'DELETE'}),
+    // Все параметры конкретного автомобиля
+    byEmobile: id    =>apiRequest(`${API_BASE}/emobile-parameter/byEmobile${id}`),
 };

@@ -21,7 +21,7 @@ type CarcassRepository interface {
 	Create(ctx context.Context, c *domain.Carcass) (string, error)
 	Update(ctx context.Context, c *domain.Carcass) error
 	Delete(ctx context.Context, id string) error
-	List(ctx context.Context) ([]*domain.Carcass, error) // каталог
+	List(ctx context.Context) ([]*domain.Carcass, error)
 }
 
 type DoorsRepository interface {
@@ -39,8 +39,6 @@ type WingsRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.Wings, error)
 }
-
-//////////////////////////////////////////////////////////////////////
 
 type ElectronicsRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Electronics, error)
@@ -74,8 +72,6 @@ type WiringRepository interface {
 	List(ctx context.Context) ([]*domain.Wiring, error)
 }
 
-/////////////////////////////////////////////////////////////////////////
-
 type ChargerSystemRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.ChargerSystem, error)
 	CreateTx(ctx context.Context, tx *sqlx.Tx, cs *domain.ChargerSystem) (string, error)
@@ -99,8 +95,6 @@ type ConnectorRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.Connector, error)
 }
-
-//////////////////////////////////////////////////////////////////////
 
 type ChassisRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Chassis, error)
@@ -133,8 +127,6 @@ type BreakSystemRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.BreakSystem, error)
 }
-
-/////////////////////////////////////////////////////////////////////////
 
 type BatteryRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Battery, error)
@@ -184,8 +176,6 @@ type EmobileRepository interface {
 	List(ctx context.Context) ([]*domain.Emobile, error)
 }
 
-/////////////////////////////////////////////////////////////////////////
-
 type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) (string, error)
 	GetByID(ctx context.Context, id string) (*domain.User, error)
@@ -195,7 +185,60 @@ type UserRepository interface {
 	List(ctx context.Context) ([]*domain.User, error)
 }
 
-//////////////////////////////////////////////////////////////////////////
+// ── ПР2: Перечисления ─────────────────────────────────────────────
+
+type EnumClassRepository interface {
+	List(ctx context.Context) ([]*domain.EnumClass, error)
+	GetByID(ctx context.Context, id string) (*domain.EnumClass, error)
+	Create(ctx context.Context, ec *domain.EnumClass) (string, error)
+	Update(ctx context.Context, ec *domain.EnumClass) error
+	Delete(ctx context.Context, id string) error
+	// GetValues вызывает SQL-функцию get_enum_values
+	GetValues(ctx context.Context, id string) ([]*domain.EnumPosition, error)
+	// ValidateValue вызывает SQL-функцию validate_enum_value
+	ValidateValue(ctx context.Context, enumClassID, value string) (bool, error)
+}
+
+type EnumPositionRepository interface {
+	List(ctx context.Context) ([]*domain.EnumPosition, error)
+	GetByID(ctx context.Context, id string) (*domain.EnumPosition, error)
+	Create(ctx context.Context, p *domain.EnumPosition) (string, error)
+	Update(ctx context.Context, p *domain.EnumPosition) error
+	Delete(ctx context.Context, id string) error
+}
+
+// ── ПР3: Параметры и реестр ───────────────────────────────────────
+
+type ParameterRepository interface {
+	List(ctx context.Context) ([]*domain.Parameter, error)
+	GetByID(ctx context.Context, id string) (*domain.Parameter, error)
+	Create(ctx context.Context, p *domain.Parameter) (string, error)
+	Update(ctx context.Context, p *domain.Parameter) error
+	Delete(ctx context.Context, id string) error
+}
+
+type ComponentParameterRepository interface {
+	List(ctx context.Context) ([]*domain.ComponentParameter, error)
+	GetByID(ctx context.Context, id string) (*domain.ComponentParameter, error)
+	Create(ctx context.Context, cp *domain.ComponentParameter) (string, error)
+	Update(ctx context.Context, cp *domain.ComponentParameter) error
+	Delete(ctx context.Context, id string) error
+	// GetByType вызывает SQL-функцию get_component_parameters
+	GetByType(ctx context.Context, componentType string) ([]*domain.ComponentParameterFull, error)
+	// CopyFromType вызывает SQL-процедуру copy_component_parameters
+	CopyFromType(ctx context.Context, fromType, toType string) error
+}
+
+type EmobileParameterValueRepository interface {
+	List(ctx context.Context) ([]*domain.EmobileParameterValue, error)
+	GetByID(ctx context.Context, id string) (*domain.EmobileParameterValue, error)
+	Create(ctx context.Context, v *domain.EmobileParameterValue) (string, error)
+	Update(ctx context.Context, v *domain.EmobileParameterValue) error
+	Delete(ctx context.Context, id string) error
+	GetByEmobile(ctx context.Context, emobileID string) ([]*domain.EmobileParameterValue, error)
+}
+
+// ── Агрегирующий Repository ──────────────────────────────────────
 
 type Repository struct {
 	Emobile       EmobileRepository
@@ -230,8 +273,17 @@ type Repository struct {
 	Inverter InverterRepository
 	Gearbox  GearboxRepository
 
-	// User
+	// user
 	User UserRepository
+
+	// ПР2
+	EnumClass    EnumClassRepository
+	EnumPosition EnumPositionRepository
+
+	// ПР3
+	Parameter              ParameterRepository
+	ComponentParameter     ComponentParameterRepository
+	EmobileParameterValue  EmobileParameterValueRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -268,7 +320,16 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Inverter: NewInverterPostgres(db),
 		Gearbox:  NewGearboxPostgres(db),
 
-		//User
+		// user
 		User: NewUserPostgres(db),
+
+		// ПР2
+		EnumClass:    NewEnumClassPostgres(db),
+		EnumPosition: NewEnumPositionPostgres(db),
+
+		// ПР3
+		Parameter:             NewParameterPostgres(db),
+		ComponentParameter:    NewComponentParameterPostgres(db),
+		EmobileParameterValue: NewEmobileParameterValuePostgres(db),
 	}
 }
