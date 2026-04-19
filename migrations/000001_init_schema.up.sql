@@ -1,3 +1,8 @@
+-- =====================================================
+-- MISPRIS — Migration UP
+-- Все *_info поля: TEXT (вместо JSONB)
+-- =====================================================
+
 CREATE TABLE users (
                        user_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        username    VARCHAR(100) UNIQUE NOT NULL,
@@ -234,6 +239,7 @@ CREATE INDEX idx_audit_table ON audit_log(table_name, record_id);
 CREATE INDEX idx_audit_user  ON audit_log(user_id);
 CREATE INDEX idx_audit_date  ON audit_log(created_at);
 
+-- ── Материализованное представление ───────────────────
 CREATE MATERIALIZED VIEW emobile_full AS
 SELECT
     e.emobile_id,

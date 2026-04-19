@@ -7,7 +7,6 @@ RUN go mod download
 
 COPY . .
 
-# Путь к пакету Go, а не к .sql файлу
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/seed ./scripts/seed/main.go
 
 FROM alpine:latest

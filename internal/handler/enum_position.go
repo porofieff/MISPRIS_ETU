@@ -74,7 +74,8 @@ func (h *Handler) DeleteEnumPosition(c *gin.Context) {
 }
 
 // ReorderEnumPosition POST /api/enum-position/reorder:id
-// Изменяет порядковый номер позиции (order_num).
+// FIX: сначала читаем текущее значение, затем обновляем только order_num —
+// иначе value затирается пустой строкой.
 func (h *Handler) ReorderEnumPosition(c *gin.Context) {
 	id := c.Param("id")
 	var input schema.ReorderEnumPositionInput
@@ -82,12 +83,17 @@ func (h *Handler) ReorderEnumPosition(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	// Для изменения порядка обновляем только order_num
+	// Загружаем текущую позицию, чтобы сохранить её value
+	existing, err := h.services.EnumPosition.GetByID(c.Request.Context(), id)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, "позиция не найдена")
+		return
+	}
 	if err := h.services.EnumPosition.Update(
-		c.Request.Context(), id, "", input.NewOrderNum,
+		c.Request.Context(), id, existing.Value, input.NewOrderNum,
 	); err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "reordered"})
+	c.JSON(http.StatusOK, gin.H{"status": "reordered", "new_order_num": input.NewOrderNum})
 }

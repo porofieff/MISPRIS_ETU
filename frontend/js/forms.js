@@ -21,7 +21,7 @@ function setFormError(container,msg){
     else el.classList.add('hidden');
 }
 
-/* ── Удаление ──────────────────────────────────── */
+/* ── Удаление ──────────────────────────────────────────────── */
 function confirmDelete(id,categoryKey,name){
     const m=createModal(`
         <div class="modal-title" style="color:#f87171">
@@ -49,24 +49,54 @@ function confirmDelete(id,categoryKey,name){
     };
 }
 
-/* ── HTML поля ─────────────────────────────────── */
-function buildFieldHtml(f,val){
-    const v=escapeHtml(val??'');
-    if(f.type==='textarea')
-        return`<textarea id="_f_${f.id}" class="input-dark" rows="2" style="resize:none">${v}</textarea>`;
-    if(f.type==='select'){
+/* ── HTML поля (async из-за select_enum) ──────────────────── */
+async function buildFieldHtml(f, val){
+    const v = escapeHtml(val ?? '');
+
+    if(f.type === 'textarea')
+        return `<textarea id="_f_${f.id}" class="input-dark" rows="2" style="resize:none">${v}</textarea>`;
+
+    // ── ПР2: select_enum — ВСЕГДА идёт в БД, никакого кэша ──
+    if(f.type === 'select_enum'){
+        const enumVals = await loadEnumCacheForType(f.enumComponent || '');
+        if(enumVals && enumVals.length > 0){
+            const opts = enumVals.map(ev =>
+                `<option value="${escapeHtml(ev.value)}"
+                         ${val === ev.value ? 'selected' : ''}>${escapeHtml(ev.value)}</option>`
+            ).join('');
+            return `<select id="_f_${f.id}" class="input-dark">
+                        <option value="">— выберите —</option>${opts}
+                    </select>
+                    <small style="color:var(--muted);font-size:.75rem;margin-top:.15rem;display:block">
+                        📋 Из справочника ПР2 (${f.enumComponent})
+                    </small>`;
+        }
+        // Fallback: статика, если справочник не заведён
+        const opts = (f.options||[]).map(o =>
+            `<option value="${escapeHtml(o)}" ${val===o?'selected':''}>${escapeHtml(o)}</option>`
+        ).join('');
+        return `<select id="_f_${f.id}" class="input-dark">
+                    <option value="">— выберите —</option>${opts}
+                </select>
+                <small style="color:#f59e0b;font-size:.75rem;margin-top:.15rem;display:block">
+                    ⚠ Справочник «${f.enumComponent}» не найден в ПР2 — используются значения по умолчанию
+                </small>`;
+    }
+
+    if(f.type === 'select'){
         const opts=(f.options||[]).map(o=>
             `<option value="${escapeHtml(o)}" ${val===o?'selected':''}>${escapeHtml(o)}</option>`
         ).join('');
-        return`<select id="_f_${f.id}" class="input-dark">
-                   <option value="">— выберите —</option>${opts}</select>`;
+        return `<select id="_f_${f.id}" class="input-dark">
+                    <option value="">— выберите —</option>${opts}</select>`;
     }
-    return`<input id="_f_${f.id}" type="${f.type}" class="input-dark"
-               value="${v}" placeholder="${escapeHtml(f.label)}">`;
+
+    return `<input id="_f_${f.id}" type="${f.type}" class="input-dark"
+                value="${v}" placeholder="${escapeHtml(f.label)}">`;
 }
 
-/* ── Форма листовой детали ─────────────────────── */
-async function openPartForm(editId,categoryKey){
+/* ── Форма листовой детали ─────────────────────────────────── */
+async function openPartForm(editId, categoryKey){
     if(!categoryKey){_openCategoryPicker();return;}
     const cat=getCatConfig(categoryKey);if(!cat)return;
     if(cat.composite){_openCompositeForm(cat,editId);return;}
@@ -79,22 +109,24 @@ async function openPartForm(editId,categoryKey){
         }catch(_){}
     }
 
-    const fieldsHtml=cat.subFields.map(f=>{
+    // Строим поля асинхронно (select_enum требует API-вызова)
+    const fieldHtmlParts = await Promise.all(cat.subFields.map(async f => {
         const val = f.id==='name'
             ? (existing[cat.nameField]??'')
             : (existing[f.dbField]??'');
-        return`<div class="form-group">
-                   <label>${escapeHtml(f.label)}</label>
-                   ${buildFieldHtml(f,val)}
-               </div>`;
-    }).join('');
+        const fieldHtml = await buildFieldHtml(f, val);
+        return `<div class="form-group">
+                    <label>${escapeHtml(f.label)}</label>
+                    ${fieldHtml}
+                </div>`;
+    }));
 
     const m=createModal(`
         <div class="modal-title">
             <i class="fas fa-${editId?'edit':'plus-circle'}"
                style="color:var(--accent)"></i>
             ${editId?'Редактировать':'Новая деталь'} — ${escapeHtml(cat.label)}</div>
-        ${fieldsHtml}
+        ${fieldHtmlParts.join('')}
         <div class="error-banner hidden">
             <i class="fas fa-exclamation-circle"></i><span></span></div>
         <div class="modal-footer">
@@ -105,18 +137,12 @@ async function openPartForm(editId,categoryKey){
 
     m.querySelector('#_cc').onclick=()=>m.remove();
     m.querySelector('#_ss').onclick=async()=>{
-        /* payload строится по f.id — json:"name", json:"info", json:"engine_type" и т.д.
-           Подтверждено: CreateBatteryInput.Name → json:"name" */
         const payload={};
         cat.subFields.forEach(f=>{
             const el=m.querySelector(`#_f_${f.id}`);
             payload[f.id]=el?el.value.trim():'';
         });
-
-        console.debug('[save] category='+cat.key+' payload='+JSON.stringify(payload));
-
         if(!payload['name']){setFormError(m,'Заполните название');return;}
-
         const btn=m.querySelector('#_ss');
         btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
         setFormError(m,'');
@@ -132,7 +158,7 @@ async function openPartForm(editId,categoryKey){
     };
 }
 
-/* ── Выбор типа детали ─────────────────────────── */
+/* ── Выбор типа детали ─────────────────────────────────────── */
 function _openCategoryPicker(){
     const leaf=CATEGORY_MAP.filter(c=>!c.composite);
     const comp=CATEGORY_MAP.filter(c=> c.composite);
@@ -157,7 +183,7 @@ function _openCategoryPicker(){
         b.addEventListener('click',()=>{m.remove();openPartForm(null,b.dataset.key);}));
 }
 
-/* ── Зависимости составных деталей ────────────── */
+/* ── Зависимости составных деталей ────────────────────────── */
 const COMPOSITE_DEPS={
     powerPoints:[
         {f:'engine_id',   c:'engines',     l:'Двигатель'},
@@ -257,18 +283,25 @@ async function _openCompositeForm(cat,editId){
             const el=m.querySelector(`#_f_${dep.f}`);
             payload[dep.f]=el?el.value.trim():'';
         });
-
-        console.debug('[save-composite] category='+cat.key+' payload='+JSON.stringify(payload));
-
         const miss=deps.find(d=>!payload[d.f]);
         if(miss){setFormError(m,`Заполните поле «${miss.l}»`);return;}
         const btn=m.querySelector('#_ss');
         btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
         setFormError(m,'');
         try{
-            if(editId) await api[cat.key].update(editId,payload);
-            else       await api[cat.key].create(payload);
-            await loadCatalogData();m.remove();
+            let newId;
+            if(editId){
+                await api[cat.key].update(editId,payload);
+            }else{
+                const resp = await api[cat.key].create(payload);
+                newId = resp?.id || resp?.ID;
+            }
+            await loadCatalogData();
+            m.remove();
+            // ── ПР3: после создания автомобиля открываем форму параметров ──
+            if(!editId && cat.key === 'emobiles' && newId){
+                openEmobileParamsForm(newId, payload['name'] || 'новый автомобиль');
+            }
         }catch(e){
             setFormError(m,e.message);
             btn.disabled=false;
@@ -277,7 +310,187 @@ async function _openCompositeForm(cat,editId){
     };
 }
 
-/* ── Пользователь ──────────────────────────────── */
+/* ── ПР3: Параметры конкретного автомобиля ─────────────────── */
+async function openEmobileParamsForm(emobileId, emobileName){
+    // Показываем загрузку
+    const loadingModal = createModal(`
+        <div class="modal-title">
+            <i class="fas fa-sliders-h" style="color:var(--accent)"></i>
+            Параметры: ${escapeHtml(emobileName)}
+        </div>
+        <div style="text-align:center;padding:2rem;color:var(--muted)">
+            <i class="fas fa-spinner fa-spin"></i> Загрузка параметров…
+        </div>`, true);
+
+    let compParams = [];
+    try{
+        // Загружаем параметры типа 'emobile' через SQL-функцию get_component_parameters
+        const url = `${API_BASE}/component-parameter/byTypeemobile`;
+        compParams = await apiRequest(url) || [];
+    }catch(e){
+        loadingModal.remove();
+        showError(`Ошибка загрузки параметров: ${e.message}`);
+        return;
+    }
+
+    // Если параметры не настроены — показываем подсказку
+    if(!compParams || compParams.length === 0){
+        loadingModal.remove();
+        const hint = createModal(`
+            <div class="modal-title">
+                <i class="fas fa-sliders-h" style="color:var(--accent)"></i>
+                Параметры (ПР3)
+            </div>
+            <div style="padding:.5rem 0;color:var(--muted);line-height:1.7">
+                <p>Для автомобиля <strong>${escapeHtml(emobileName)}</strong> ещё не настроены параметры ПР3.</p>
+                <p style="margin-top:.8rem">Чтобы добавить параметры:</p>
+                <ol style="margin-left:1.2rem;margin-top:.4rem">
+                    <li>Нажмите кнопку <strong>Параметры</strong> в главном меню</li>
+                    <li>Вкладка <strong>Описания параметров</strong> → создать параметр<br>
+                        (например: «Запас хода», тип real, единица км)</li>
+                    <li>Вкладка <strong>Параметры компонентов</strong> → привязать параметр,<br>
+                        тип компонента: <code>emobile</code></li>
+                    <li>После этого кнопка <i class="fas fa-sliders-h"></i> покажет форму заполнения</li>
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="_phClose">Понятно</button>
+                <button class="btn btn-primary" id="_phParams">Открыть Параметры</button>
+            </div>`);
+        hint.querySelector('#_phClose').onclick = () => hint.remove();
+        hint.querySelector('#_phParams').onclick = () => { hint.remove(); openParametersManager(); };
+        return;
+    }
+
+    // Загружаем уже заполненные значения
+    let existingVals = {};
+    try{
+        const vals = await apiRequest(`${API_BASE}/emobile-parameter/byEmobile${emobileId}`) || [];
+        vals.forEach(v => {
+            // Ключ — component_parameter_id
+            existingVals[String(v.component_parameter_id)] = v;
+        });
+    }catch(_){}
+
+    loadingModal.remove();
+
+    // Строим поля формы для каждого параметра
+    const buildParamField = async (cp) => {
+        const cpId = String(cp.cp_id || cp.component_parameter_id);
+        const existing = existingVals[cpId] || {};
+        const unitStr = cp.measuring_unit ? ` (${cp.measuring_unit})` : '';
+        const rangeStr = (cp.min_val || cp.max_val)
+            ? `<span style="font-size:.72rem;color:var(--faint)"> [${cp.min_val}–${cp.max_val}]</span>`
+            : '';
+
+        if(cp.param_type === 'real' || cp.param_type === 'int'){
+            const curVal = cp.param_type === 'real'
+                ? (existing.val_real !== undefined && existing.val_real !== 0 ? existing.val_real : '')
+                : (existing.val_int  !== undefined && existing.val_int  !== 0 ? existing.val_int  : '');
+            return `<div class="form-group">
+                <label>${escapeHtml(cp.name + unitStr)}${rangeStr}</label>
+                <input id="_pp_${cpId}" type="number" step="${cp.param_type==='int'?'1':'any'}"
+                       class="input-dark" value="${curVal}"
+                       placeholder="${cp.min_val||''}–${cp.max_val||''}">
+            </div>`;
+        }
+        if(cp.param_type === 'str'){
+            return `<div class="form-group">
+                <label>${escapeHtml(cp.name)}</label>
+                <input id="_pp_${cpId}" type="text" class="input-dark"
+                       value="${escapeHtml(existing.val_str||'')}">
+            </div>`;
+        }
+        if(cp.param_type === 'enum'){
+            // Загружаем параметр чтобы узнать его enum_class_id
+            let enumOpts = '';
+            try{
+                const param = await apiRequest(`${API_BASE}/parameter/getParameter${cp.param_id}`);
+                if(param && param.enum_class_id){
+                    const vals = await apiRequest(`${API_BASE}/enum-class/values${param.enum_class_id}`) || [];
+                    enumOpts = vals.map(ev =>
+                        `<option value="${ev.enum_position_id}"
+                                 ${String(existing.enum_val_id) === String(ev.enum_position_id) ? 'selected' : ''}>
+                             ${escapeHtml(ev.value)}</option>`
+                    ).join('');
+                }
+            }catch(e){ console.warn('[pr3 enum field]', e.message); }
+            return `<div class="form-group">
+                <label>${escapeHtml(cp.name)}</label>
+                <select id="_pp_${cpId}" class="input-dark">
+                    <option value="">— выберите —</option>${enumOpts}
+                </select>
+            </div>`;
+        }
+        return '';
+    };
+
+    const fieldHtmls = await Promise.all(compParams.map(buildParamField));
+
+    const m = createModal(`
+        <div class="modal-title">
+            <i class="fas fa-sliders-h" style="color:var(--accent)"></i>
+            Параметры: ${escapeHtml(emobileName)} (ПР3)
+        </div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem">
+            Характеристики автомобиля. Оставьте пустым чтобы не менять.
+        </p>
+        ${fieldHtmls.join('')}
+        <div class="error-banner hidden"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="_ppCancel">Отмена</button>
+            <button class="btn btn-primary" id="_ppSave">
+                <i class="fas fa-save"></i> Сохранить параметры
+            </button>
+        </div>`, true);
+
+    m.querySelector('#_ppCancel').onclick = () => m.remove();
+    m.querySelector('#_ppSave').onclick = async () => {
+        const btn = m.querySelector('#_ppSave');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение…';
+        setFormError(m, '');
+
+        const errors = [];
+        for(const cp of compParams){
+            const cpId = String(cp.cp_id || cp.component_parameter_id);
+            const el = m.querySelector(`#_pp_${cpId}`);
+            if(!el || el.value === '') continue;  // пропускаем пустые
+
+            const body = {
+                emobile_id:             String(emobileId),
+                component_parameter_id: cpId,
+            };
+            if(cp.param_type === 'real')      body.val_real  = el.value;
+            else if(cp.param_type === 'int')  body.val_int   = el.value;
+            else if(cp.param_type === 'str')  body.val_str   = el.value;
+            else if(cp.param_type === 'enum') body.enum_val_id = el.value;
+
+            try{
+                const existRecord = existingVals[cpId];
+                if(existRecord && existRecord.value_id){
+                    // Обновляем существующее значение
+                    await api.emobileParam.update(String(existRecord.value_id), body);
+                }else{
+                    // Создаём новое
+                    await api.emobileParam.create(body);
+                }
+            }catch(e){
+                errors.push(`${cp.name}: ${e.message}`);
+            }
+        }
+
+        if(errors.length){
+            setFormError(m, errors.join('; '));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Сохранить параметры';
+        }else{
+            m.remove();
+        }
+    };
+}
+
+/* ── Пользователь ──────────────────────────────────────────── */
 function openCreateUserForm(){
     const m=createModal(`
         <div class="modal-title">

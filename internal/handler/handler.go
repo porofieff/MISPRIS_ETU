@@ -297,6 +297,113 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			// Все значения параметров конкретного автомобиля
 			emobileParameter.GET("/byEmobile:id", h.GetEmobileParameterValuesByEmobile)
 		}
+
+		// ── ПР4: СХД ────────────────────────────────────────────────────
+		shd := api.Group("/shd")
+		{
+			shd.GET("list", h.ListShd)
+			shd.GET("/getShd:id", h.GetShd)
+			shd.POST("create", h.CreateShd)
+			shd.PUT("/update:id", h.UpdateShd)
+			shd.DELETE("/delete:id", h.DeleteShd)
+		}
+
+		// ── ПР4: Типы ХО (классификатор) ────────────────────────────────
+		hoClass := api.Group("/ho-class")
+		{
+			hoClass.GET("list", h.ListHoClasses)
+			hoClass.GET("/getHoClass:id", h.GetHoClass)
+			hoClass.POST("create", h.CreateHoClass)
+			hoClass.PUT("/update:id", h.UpdateHoClass)
+			hoClass.DELETE("/delete:id", h.DeleteHoClass)
+			hoClass.GET("terminal", h.GetHoClassTerminal)
+			hoClass.GET("/children:id", h.GetHoClassChildren)
+			hoClass.GET("/parameters:id", h.GetHoClassParameters) // SQL function
+		}
+
+		// ── ПР4: Роли ────────────────────────────────────────────────────
+		hoRole := api.Group("/ho-role")
+		{
+			hoRole.GET("list", h.ListHoRoles)
+			hoRole.GET("/getHoRole:id", h.GetHoRole)
+			hoRole.POST("create", h.CreateHoRole)
+			hoRole.PUT("/update:id", h.UpdateHoRole)
+			hoRole.DELETE("/delete:id", h.DeleteHoRole)
+		}
+
+		hoClassRole := api.Group("/ho-class-role")
+		{
+			hoClassRole.GET("list", h.ListHoClassRoles)    // ?ho_class=id
+			hoClassRole.POST("create", h.CreateHoClassRole)
+			hoClassRole.DELETE("/delete:id", h.DeleteHoClassRole)
+		}
+
+		hoClassParam := api.Group("/ho-class-parameter")
+		{
+			hoClassParam.GET("list", h.ListHoClassParameters)              // ?ho_class=id
+			hoClassParam.GET("/getHoClassParameter:id", h.GetHoClassParameter)
+			hoClassParam.POST("create", h.CreateHoClassParameter)
+			hoClassParam.PUT("/update:id", h.UpdateHoClassParameter)
+			hoClassParam.DELETE("/delete:id", h.DeleteHoClassParameter)
+			hoClassParam.POST("copyFromClass", h.CopyHoClassParameters)
+		}
+
+		docClass := api.Group("/document-class")
+		{
+			docClass.GET("list", h.ListDocumentClasses)
+			docClass.GET("/getDocumentClass:id", h.GetDocumentClass)
+			docClass.POST("create", h.CreateDocumentClass)
+			docClass.PUT("/update:id", h.UpdateDocumentClass)
+			docClass.DELETE("/delete:id", h.DeleteDocumentClass)
+		}
+
+		hoClassDoc := api.Group("/ho-class-document")
+		{
+			hoClassDoc.GET("list", h.ListHoClassDocuments)   // ?ho_class=id
+			hoClassDoc.POST("create", h.CreateHoClassDocument)
+			hoClassDoc.DELETE("/delete:id", h.DeleteHoClassDocument)
+		}
+
+		hoInst := api.Group("/ho")
+		{
+			hoInst.GET("list", h.ListHoInstances)            // ?ho_class=id filter
+			hoInst.GET("/getHo:id", h.GetHoInstance)
+			hoInst.POST("create", h.CreateHoInstance)
+			hoInst.PUT("/update:id", h.UpdateHoInstance)
+			hoInst.DELETE("/delete:id", h.DeleteHoInstance)
+			hoInst.GET("/findByClass:id", h.FindHoByClass)   // SQL function
+		}
+
+		hoActor := api.Group("/ho-actor")
+		{
+			hoActor.GET("list", h.ListHoActors)              // ?ho=id
+			hoActor.POST("create", h.CreateHoActor)
+			hoActor.DELETE("/delete:id", h.DeleteHoActor)
+		}
+
+		hoParamVal := api.Group("/ho-param-value")
+		{
+			hoParamVal.GET("list", h.ListHoParameterValues)  // ?ho=id
+			hoParamVal.GET("/getHoParamValue:id", h.GetHoParameterValue)
+			hoParamVal.POST("create", h.CreateHoParameterValue)
+			hoParamVal.PUT("/update:id", h.UpdateHoParameterValue)
+			hoParamVal.DELETE("/delete:id", h.DeleteHoParameterValue)
+		}
+
+		hoDoc := api.Group("/ho-document")
+		{
+			hoDoc.GET("list", h.ListHoDocuments)             // ?ho=id
+			hoDoc.POST("create", h.CreateHoDocument)
+			hoDoc.DELETE("/delete:id", h.DeleteHoDocument)
+		}
+
+		hoPos := api.Group("/ho-position")
+		{
+			hoPos.GET("list", h.ListHoPositions)             // ?ho=id
+			hoPos.POST("create", h.CreateHoPosition)
+			hoPos.PUT("/update:id", h.UpdateHoPosition)
+			hoPos.DELETE("/delete:id", h.DeleteHoPosition)
+		}
 	}
 
 	router.GET("/health", h.Health)

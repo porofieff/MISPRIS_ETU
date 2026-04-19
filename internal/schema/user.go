@@ -3,13 +3,12 @@ package schema
 type CreateUserInput struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
-	Role     string `json:"role" binding:"required,oneof=admin user"`
+	Role     string `json:"role"     binding:"required"`
 	IsActive bool   `json:"is_active"`
 }
-
 type UpdateUserInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Role     string `json:"role" binding:"omitempty,oneof=admin user"`
-	IsActive *bool  `json:"is_active"` 
+	Role     string `json:"role"`
+	IsActive *bool  `json:"is_active"`
 }

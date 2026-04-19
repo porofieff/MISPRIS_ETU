@@ -3,7 +3,7 @@ const API_BASE = 'http://localhost:8080/api';
 
 function escapeHtml(s){
     if(!s&&s!==0)return'';
-    return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    return String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
 }
 function shortId(id){return id!==undefined&&id!==null?String(id).slice(0,8):'—'}
 
@@ -45,17 +45,38 @@ function friendlyError(raw){
     return s;
 }
 
+// ============================================================
+//  ЗАГРУЗКА ЗНАЧЕНИЙ ПЕРЕЧИСЛЕНИЯ (ПР2)
+//  БЕЗ кэша — каждый раз идёт в БД, чтобы сразу видеть
+//  значения добавленные через «Справочники».
+// ============================================================
+async function loadEnumCacheForType(componentType){
+    if(!componentType) return [];
+    try{
+        // Ищем enum_class для данного типа компонента
+        const classes = await apiRequest(`${API_BASE}/enum-class/list`);
+        const cls = (classes||[]).find(c => c.component_type === componentType);
+        if(!cls) return [];
+        // Загружаем значения упорядоченные по order_num
+        const vals = await apiRequest(`${API_BASE}/enum-class/values${cls.enum_class_id}`);
+        return vals || [];
+    }catch(e){
+        console.warn(`[enum load] ${componentType}:`, e.message);
+        return [];
+    }
+}
+
 /*
  * subFields:
- *   id       — id HTML-элемента (<input id="_f_{id}">)
- *   dbField  — ключ из ответа API (для чтения текущего значения при редактировании)
- *              ОН ЖЕ используется как ключ payload при сохранении,
- *              чтобы точно совпадать с json-тегами Go-структур.
- *   label    — метка поля
- *   type     — тип поля
+ *   id            — id HTML-элемента
+ *   dbField       — ключ из ответа API
+ *   label         — метка поля
+ *   type          — 'text' | 'number' | 'textarea' | 'select' | 'select_enum'
+ *   enumComponent — для 'select_enum': component_type в enum_class
+ *   options       — fallback-список если справочник ПР2 пуст
  */
 const CATEGORY_MAP=[
-    /* ── Батареи ────────────────────────────────────── */
+    /* ── Батареи ────────────────────────────────────────── */
     {key:'batteries',label:'Батареи',group:'battery',getWord:'Battery',
      idField:'battery_id',nameField:'battery_name',
      infoFn:i=>[i.battery_type,
@@ -63,20 +84,20 @@ const CATEGORY_MAP=[
                 i.battery_info].filter(Boolean).join(' · '),
      subFields:[
          {id:'name',             dbField:'battery_name',     label:'Название',       type:'text'},
-         {id:'battery_type',     dbField:'battery_type',     label:'Тип',            type:'select',options:['Li-ion','Li-polymer']},
+         {id:'battery_type',     dbField:'battery_type',     label:'Тип',            type:'select_enum', enumComponent:'battery', options:['Li-ion','Li-polymer']},
          {id:'battery_capacity', dbField:'battery_capacity', label:'Ёмкость (кВтч)', type:'number'},
          {id:'info',             dbField:'battery_info',     label:'Информация',     type:'textarea'},
      ]},
-    /* ── Двигатели ───────────────────────────────────── */
+    /* ── Двигатели ───────────────────────────────────────── */
     {key:'engines',label:'Двигатели',group:'engine',getWord:'Engine',
      idField:'engine_id',nameField:'engine_name',
-     infoFn:i=>[i.engine_type, i.engine_info].filter(Boolean).join(' · '),
+     infoFn:i=>[i.engine_type,i.engine_info].filter(Boolean).join(' · '),
      subFields:[
          {id:'name',        dbField:'engine_name', label:'Название',   type:'text'},
-         {id:'engine_type', dbField:'engine_type', label:'Тип',        type:'select',options:['AC','DC']},
+         {id:'engine_type', dbField:'engine_type', label:'Тип',        type:'select_enum', enumComponent:'engine', options:['AC','DC']},
          {id:'info',        dbField:'engine_info', label:'Информация', type:'textarea'},
      ]},
-    /* ── Инверторы ───────────────────────────────────── */
+    /* ── Инверторы ───────────────────────────────────────── */
     {key:'inverters',label:'Инверторы',group:'inverter',getWord:'Inverter',
      idField:'inverter_id',nameField:'inverter_name',
      infoFn:i=>i.inverter_info||'',
@@ -84,7 +105,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'inverter_name',label:'Название',  type:'text'},
          {id:'info',dbField:'inverter_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── КПП ─────────────────────────────────────────── */
+    /* ── КПП ─────────────────────────────────────────────── */
     {key:'gearboxes',label:'КПП',group:'gearbox',getWord:'Gearbox',
      idField:'gearbox_id',nameField:'gearbox_name',
      infoFn:i=>i.gearbox_info||'',
@@ -92,7 +113,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'gearbox_name',label:'Название',  type:'text'},
          {id:'info',dbField:'gearbox_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Рамы ────────────────────────────────────────── */
+    /* ── Рамы ────────────────────────────────────────────── */
     {key:'frames',label:'Рамы',group:'frame',getWord:'Frame',
      idField:'frame_id',nameField:'frame_name',
      infoFn:i=>i.frame_info||'',
@@ -100,7 +121,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'frame_name',label:'Название',  type:'text'},
          {id:'info',dbField:'frame_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Подвески ────────────────────────────────────── */
+    /* ── Подвески ────────────────────────────────────────── */
     {key:'suspensions',label:'Подвески',group:'suspension',getWord:'Suspension',
      idField:'suspension_id',nameField:'suspension_name',
      infoFn:i=>i.suspension_info||'',
@@ -108,8 +129,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'suspension_name',label:'Название',  type:'text'},
          {id:'info',dbField:'suspension_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Тормозные системы ───────────────────────────── */
-    /* ФИКС: infoFn и dbField используют break_system_info, а НЕ break_info */
+    /* ── Тормозные системы ───────────────────────────────── */
     {key:'breakSystems',label:'Тормозные системы',group:'break-system',getWord:'BreakSystem',
      idField:'break_system_id',nameField:'break_system_name',
      infoFn:i=>i.break_system_info||'',
@@ -117,7 +137,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'break_system_name',label:'Название',  type:'text'},
          {id:'info',dbField:'break_system_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Зарядные устройства ─────────────────────────── */
+    /* ── Зарядные устройства ─────────────────────────────── */
     {key:'chargers',label:'Зарядные устройства',group:'charger',getWord:'Charger',
      idField:'charger_id',nameField:'charger_name',
      infoFn:i=>i.charger_info||'',
@@ -125,7 +145,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'charger_name',label:'Название',  type:'text'},
          {id:'info',dbField:'charger_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Коннекторы ──────────────────────────────────── */
+    /* ── Коннекторы ──────────────────────────────────────── */
     {key:'connectors',label:'Коннекторы',group:'connector',getWord:'Connector',
      idField:'connector_id',nameField:'connector_name',
      infoFn:i=>i.connector_info||'',
@@ -133,7 +153,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'connector_name',label:'Название',  type:'text'},
          {id:'info',dbField:'connector_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Контроллеры ─────────────────────────────────── */
+    /* ── Контроллеры ─────────────────────────────────────── */
     {key:'controllers',label:'Контроллеры',group:'controller',getWord:'Controller',
      idField:'controller_id',nameField:'controller_name',
      infoFn:i=>i.controller_info||'',
@@ -141,7 +161,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'controller_name',label:'Название',  type:'text'},
          {id:'info',dbField:'controller_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Датчики ─────────────────────────────────────── */
+    /* ── Датчики ─────────────────────────────────────────── */
     {key:'sensors',label:'Датчики',group:'sensor',getWord:'Sensor',
      idField:'sensor_id',nameField:'sensor_name',
      infoFn:i=>i.sensor_info||'',
@@ -149,7 +169,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'sensor_name',label:'Название',  type:'text'},
          {id:'info',dbField:'sensor_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Проводка ────────────────────────────────────── */
+    /* ── Проводка ────────────────────────────────────────── */
     {key:'wirings',label:'Проводка',group:'wiring',getWord:'Wiring',
      idField:'wiring_id',nameField:'wiring_name',
      infoFn:i=>i.wiring_info||'',
@@ -157,7 +177,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'wiring_name',label:'Название',  type:'text'},
          {id:'info',dbField:'wiring_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Каркасы ─────────────────────────────────────── */
+    /* ── Каркасы ─────────────────────────────────────────── */
     {key:'carcasses',label:'Каркасы',group:'carcass',getWord:'Carcass',
      idField:'carcass_id',nameField:'carcass_name',
      infoFn:i=>i.carcass_info||'',
@@ -165,7 +185,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'carcass_name',label:'Название',  type:'text'},
          {id:'info',dbField:'carcass_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Двери ───────────────────────────────────────── */
+    /* ── Двери ───────────────────────────────────────────── */
     {key:'doors',label:'Двери',group:'doors',getWord:'Doors',
      idField:'doors_id',nameField:'doors_name',
      infoFn:i=>i.doors_info||'',
@@ -173,7 +193,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'doors_name',label:'Название',  type:'text'},
          {id:'info',dbField:'doors_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Крылья ──────────────────────────────────────── */
+    /* ── Крылья ──────────────────────────────────────────── */
     {key:'wings',label:'Крылья',group:'wings',getWord:'Wings',
      idField:'wings_id',nameField:'wings_name',
      infoFn:i=>i.wings_info||'',
@@ -181,7 +201,7 @@ const CATEGORY_MAP=[
          {id:'name',dbField:'wings_name',label:'Название',  type:'text'},
          {id:'info',dbField:'wings_info',label:'Информация',type:'textarea'},
      ]},
-    /* ── Составные ───────────────────────────────────── */
+    /* ── Составные ───────────────────────────────────────── */
     {key:'powerPoints',label:'Силовые установки',group:'power-point',getWord:'PowerPoint',composite:true,
      idField:'power_point_id',nameField:null,
      infoFn:i=>`#${shortId(i.engine_id)}`},

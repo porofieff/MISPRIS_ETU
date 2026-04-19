@@ -15,9 +15,9 @@ type Carcass struct {
 	ID        string    `json:"carcass_id"   db:"carcass_id"`
 	Name      string    `json:"carcass_name" db:"carcass_name"`
 	Info      string    `json:"carcass_info" db:"carcass_info"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt bool      `json:"deleted_at" db:"deleted_at"`
+	CreatedAt time.Time `json:"created_at"   db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"   db:"updated_at"`
+	DeletedAt bool      `json:"deleted_at"   db:"deleted_at"`
 }
 
 type Doors struct {

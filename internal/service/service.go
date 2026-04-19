@@ -239,6 +239,107 @@ type EmobileParameterValueService interface {
 	GetByEmobile(ctx context.Context, emobileID string) ([]*domain.EmobileParameterValue, error)
 }
 
+// ── ПР4: Хозяйственные операции ───────────────────────────────────
+
+type ShdService interface {
+	List(ctx context.Context) ([]*domain.SHD, error)
+	GetByID(ctx context.Context, id string) (*domain.SHD, error)
+	Create(ctx context.Context, name, shdType, inn, description string) (string, error)
+	Update(ctx context.Context, id, name, shdType, inn, description string) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassService interface {
+	List(ctx context.Context) ([]*domain.HoClass, error)
+	GetByID(ctx context.Context, id string) (*domain.HoClass, error)
+	Create(ctx context.Context, name, designation, parentID string, isTerminal bool) (string, error)
+	Update(ctx context.Context, id, name, designation, parentID string, isTerminal bool) error
+	Delete(ctx context.Context, id string) error
+	GetTerminal(ctx context.Context) ([]*domain.HoClass, error)
+	GetChildren(ctx context.Context, parentID string) ([]*domain.HoClass, error)
+}
+
+type HoRoleService interface {
+	List(ctx context.Context) ([]*domain.HoRole, error)
+	GetByID(ctx context.Context, id string) (*domain.HoRole, error)
+	Create(ctx context.Context, name, description string) (string, error)
+	Update(ctx context.Context, id, name, description string) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassRoleService interface {
+	List(ctx context.Context, hoClassID string) ([]*domain.HoClassRole, error)
+	ListByClass(ctx context.Context, hoClassID string) ([]*domain.HoClassRole, error)
+	Create(ctx context.Context, hoClassID, hoRoleID string, isRequired bool) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassParameterService interface {
+	List(ctx context.Context, hoClassID string) ([]*domain.HoClassParameter, error)
+	GetByID(ctx context.Context, id string) (*domain.HoClassParameter, error)
+	Create(ctx context.Context, hoClassID, parameterID string, orderNum int, minVal, maxVal float64) (string, error)
+	Update(ctx context.Context, id string, orderNum int, minVal, maxVal float64) error
+	Delete(ctx context.Context, id string) error
+	// GetByHoClass вызывает SQL-функцию get_ho_class_parameters
+	GetByHoClass(ctx context.Context, hoClassID string) ([]*domain.HoClassParameterFull, error)
+	// CopyFromClass копирует параметры INSERT...SELECT
+	CopyFromClass(ctx context.Context, fromClassID, toClassID string) error
+}
+
+type DocumentClassService interface {
+	List(ctx context.Context) ([]*domain.DocumentClass, error)
+	GetByID(ctx context.Context, id string) (*domain.DocumentClass, error)
+	Create(ctx context.Context, name, code, description string) (string, error)
+	Update(ctx context.Context, id, name, code, description string) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassDocumentService interface {
+	ListByClass(ctx context.Context, hoClassID string) ([]*domain.HoClassDocument, error)
+	Create(ctx context.Context, hoClassID, docClassID, roleName string, isRequired bool) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoInstanceService interface {
+	List(ctx context.Context, hoClassID string) ([]*domain.HoInstance, error)
+	GetByID(ctx context.Context, id string) (*domain.HoInstance, error)
+	Create(ctx context.Context, hoClassID, docNumber, docDate string, totalAmount float64, note string) (string, error)
+	Update(ctx context.Context, id, status, docNumber, docDate string, totalAmount float64, note string) error
+	Delete(ctx context.Context, id string) error
+	// FindByClass вызывает SQL-функцию find_ho_by_class
+	FindByClass(ctx context.Context, hoClassID string) ([]*domain.HoInstanceFull, error)
+}
+
+type HoActorService interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoActor, error)
+	// Create вызывает SQL-процедуру set_ho_actor
+	Create(ctx context.Context, hoID, hoRoleID, shdID string) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoParameterValueService interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoParameterValueFull, error)
+	GetByID(ctx context.Context, id string) (*domain.HoParameterValue, error)
+	// Create вызывает SQL-процедуру write_ho_par
+	Create(ctx context.Context, hoID, hoClassParameterID string, valReal float64, valInt int, valStr, valDate, enumValID string) (string, error)
+	Update(ctx context.Context, id, hoID, hoClassParameterID string, valReal float64, valInt int, valStr, valDate, enumValID string) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoDocumentService interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoDocument, error)
+	Create(ctx context.Context, hoID, docClassID, docNumber, docDate, note string) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoPositionService interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoPositionFull, error)
+	// Create вызывает SQL-процедуру add_ho_position
+	Create(ctx context.Context, hoID, emobileID string, quantity int, unitPrice float64, note string) (string, error)
+	Update(ctx context.Context, id string, quantity int, unitPrice float64, note string) error
+	Delete(ctx context.Context, id string) error
+}
+
 // ── Агрегирующий Service ──────────────────────────────────────────
 
 type Service struct {
@@ -270,9 +371,23 @@ type Service struct {
 	EnumPosition EnumPositionService
 
 	// ПР3
-	Parameter              ParameterService
-	ComponentParameter     ComponentParameterService
-	EmobileParameterValue  EmobileParameterValueService
+	Parameter             ParameterService
+	ComponentParameter    ComponentParameterService
+	EmobileParameterValue EmobileParameterValueService
+
+	// ПР4
+	Shd              ShdService
+	HoClass          HoClassService
+	HoRole           HoRoleService
+	HoClassRole      HoClassRoleService
+	HoClassParameter HoClassParameterService
+	DocumentClass    DocumentClassService
+	HoClassDocument  HoClassDocumentService
+	HoInstance       HoInstanceService
+	HoActor          HoActorService
+	HoParameterValue HoParameterValueService
+	HoDocument       HoDocumentService
+	HoPosition       HoPositionService
 }
 
 func NewService(db *sqlx.DB, repos *repository.Repository) *Service {
@@ -334,5 +449,19 @@ func NewService(db *sqlx.DB, repos *repository.Repository) *Service {
 		Parameter:             NewParameterService(repos.Parameter),
 		ComponentParameter:    NewComponentParameterService(repos.ComponentParameter),
 		EmobileParameterValue: NewEmobileParameterValueService(repos.EmobileParameterValue),
+
+		// ПР4
+		Shd:              NewShdService(repos.Shd),
+		HoClass:          NewHoClassService(repos.HoClass),
+		HoRole:           NewHoRoleService(repos.HoRole),
+		HoClassRole:      NewHoClassRoleService(repos.HoClassRole),
+		HoClassParameter: NewHoClassParameterService(repos.HoClassParameter),
+		DocumentClass:    NewDocumentClassService(repos.DocumentClass),
+		HoClassDocument:  NewHoClassDocumentService(repos.HoClassDocument),
+		HoInstance:       NewHoInstanceService(repos.HoInstance),
+		HoActor:          NewHoActorService(repos.HoActor),
+		HoParameterValue: NewHoParameterValueService(repos.HoParameterValue),
+		HoDocument:       NewHoDocumentService(repos.HoDocument),
+		HoPosition:       NewHoPositionService(repos.HoPosition),
 	}
 }

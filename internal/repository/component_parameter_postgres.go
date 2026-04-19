@@ -58,13 +58,27 @@ func (r *ComponentParameterPostgres) Delete(ctx context.Context, id string) erro
 	return err
 }
 
-// GetByType вызывает SQL-функцию get_component_parameters — полные данные о параметрах типа.
+// GetByType — прямой JOIN с COALESCE вместо SQL-функции (обходим NULL-поля).
 func (r *ComponentParameterPostgres) GetByType(ctx context.Context, componentType string) ([]*domain.ComponentParameterFull, error) {
 	var items []*domain.ComponentParameterFull
-	query := `SELECT * FROM get_component_parameters($1)`
+	query := `
+		SELECT
+			cp.component_parameter_id        AS cp_id,
+			p.parameter_id                   AS param_id,
+			p.designation,
+			p.name,
+			p.param_type,
+			COALESCE(p.measuring_unit, '') AS measuring_unit,
+			COALESCE(cp.min_val, 0)         AS min_val,
+			COALESCE(cp.max_val, 0)         AS max_val,
+			cp.order_num
+		FROM component_parameter cp
+		JOIN parameter p ON cp.parameter_id = p.parameter_id
+		WHERE cp.component_type = $1
+		ORDER BY cp.order_num`
 	err := r.db.SelectContext(ctx, &items, query, componentType)
 	if err != nil {
-		return nil, fmt.Errorf("get_component_parameters: %w", err)
+		return nil, fmt.Errorf("GetByType: %w", err)
 	}
 	return items, nil
 }

@@ -519,6 +519,14 @@ async function openParametersManager(){
 // ── Форма параметра ───────────────────────────────────────────────
 
 function openParameterForm(id, onSave){
+    const addToEmobileHtml = id ? '' : `
+        <div class="form-group" style="margin-top:.4rem">
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;user-select:none">
+                <input type="checkbox" id="_p_emobile" checked
+                       style="width:16px;height:16px;accent-color:var(--accent)">
+                <span>Добавить к параметрам автомобилей (emobile)</span>
+            </label>
+        </div>`;
     const m=createModal(`
         <div class="modal-title">
             <i class="fas fa-${id?'edit':'plus'}" style="color:var(--accent)"></i>
@@ -549,6 +557,7 @@ function openParameterForm(id, onSave){
             <label>ID перечисления (для типа enum)</label>
             <input id="_pecid" class="input-dark" type="number" placeholder="ID enum_class">
         </div>
+        ${addToEmobileHtml}
         <div class="error-banner hidden"><i class="fas fa-exclamation-circle"></i><span></span></div>
         <div class="modal-footer">
             <button class="btn btn-secondary" id="_pcc">Отмена</button>
@@ -581,9 +590,22 @@ function openParameterForm(id, onSave){
                 measuring_unit:m.querySelector('#_punit').value,
                 enum_class_id:m.querySelector('#_pecid').value,
             };
-            if(id) await api.parameter.update(id,data);
-            else   await api.parameter.create(data);
-            showToast(id?'Параметр обновлён':'Параметр создан');
+            if(id){
+                await api.parameter.update(id,data);
+                showToast('Параметр обновлён');
+            } else {
+                const resp = await api.parameter.create(data);
+                // Если чекбокс отмечен — привязываем к типу emobile
+                const linkCb = m.querySelector('#_p_emobile');
+                if(linkCb && linkCb.checked && resp && resp.id){
+                    await api.componentParameter.create({
+                        component_type:'emobile',
+                        parameter_id:String(resp.id),
+                        order_num:0,
+                    }).catch(()=>{});
+                }
+                showToast('Параметр создан');
+            }
             m.remove();if(onSave)onSave();
         }catch(e){
             setFormError(m,e.message);

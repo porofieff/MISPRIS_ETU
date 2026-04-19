@@ -56,15 +56,15 @@ func (r *EnumClassPostgres) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-// GetValues вызывает SQL-функцию get_enum_values — возвращает позиции в заданном порядке.
+// GetValues — прямой запрос вместо SQL-функции (обходим несовпадение колонок).
+// Возвращает позиции упорядоченные по order_num.
 func (r *EnumClassPostgres) GetValues(ctx context.Context, id string) ([]*domain.EnumPosition, error) {
 	var positions []*domain.EnumPosition
-	query := `SELECT * FROM get_enum_values($1)`
+	query := `SELECT enum_position_id, enum_class_id, value, order_num,
+	           created_at, updated_at
+	          FROM enum_position WHERE enum_class_id = $1 ORDER BY order_num`
 	err := r.db.SelectContext(ctx, &positions, query, id)
-	if err != nil {
-		return nil, fmt.Errorf("get_enum_values: %w", err)
-	}
-	return positions, nil
+	return positions, err
 }
 
 // ValidateValue вызывает SQL-функцию validate_enum_value.
