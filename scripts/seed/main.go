@@ -33,6 +33,9 @@ func main() {
 	if err := runSeed(ctx, db); err != nil {
 		log.Fatalf("seed: error: %v", err)
 	}
+	if err := runSeedPR2PR3(ctx, db); err != nil {
+		log.Printf("seed PR2/PR3: %v (non-fatal)", err)
+	}
 	log.Println("seed: done ✓")
 }
 
@@ -389,6 +392,102 @@ func runSeed(ctx context.Context, db *sqlx.DB) error {
 	} else {
 		log.Println("seed: emobile_full refreshed ✓")
 	}
+
+	return nil
+}
+
+
+func runSeedPR2PR3(ctx context.Context, db *sqlx.DB) error {
+	// Идемпотентная проверка
+	var cnt int
+	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM enum_class`).Scan(&cnt); err != nil {
+		return nil // таблица может не существовать
+	}
+	if cnt > 0 {
+		log.Printf("seed PR2/PR3: already seeded (%d enum_class records)", cnt)
+		return nil
+	}
+
+	// ── ПР2: Классы перечислений ──────────────────────────────────────────
+	type enumClass struct{ name, compType string }
+	classes := []enumClass{
+		{"Тип двигателя",        "engine"},
+		{"Тип батареи",          "battery"},
+		{"Стандарт зарядки",     "charger"},
+		{"Тип привода",          "emobile"},
+		{"Класс защиты IP",      "battery"},
+	}
+	classIDs := make([]int, len(classes))
+	for i, c := range classes {
+		if err := db.QueryRowContext(ctx,
+			`INSERT INTO enum_class (name, component_type) VALUES($1,$2) RETURNING enum_class_id`,
+			c.name, c.compType).Scan(&classIDs[i]); err != nil {
+			log.Printf("seed: enum_class '%s': %v", c.name, err)
+			return nil
+		}
+	}
+
+	// Позиции перечислений
+	positions := map[int][][2]string{
+		classIDs[0]: {{"AC", "0"}, {"DC", "1"}},
+		classIDs[1]: {{"Li-ion", "0"}, {"Li-polymer", "1"}},
+		classIDs[2]: {{"CCS2", "0"}, {"CHAdeMO", "1"}, {"Type 2", "2"}, {"GB/T", "3"}},
+		classIDs[3]: {{"Передний", "0"}, {"Задний", "1"}, {"Полный", "2"}},
+		classIDs[4]: {{"IP54", "0"}, {"IP65", "1"}, {"IP67", "2"}, {"IP68", "3"}},
+	}
+	for classID, vals := range positions {
+		for _, v := range vals {
+			if _, err := db.ExecContext(ctx,
+				`INSERT INTO enum_position (enum_class_id, value, order_num) VALUES($1,$2,$3)`,
+				classID, v[0], v[1]); err != nil {
+				log.Printf("seed: enum_position: %v", err)
+			}
+		}
+	}
+	log.Printf("seed: PR2 enum_class (%d classes) seeded", len(classes))
+
+	// ── ПР3: Параметры ─────────────────────────────────────────────────────
+	type param struct{ des, name, ptype, unit string; enumClassID int }
+	params := []param{
+		{"range_km",   "Запас хода",              "real", "км",   0},
+		{"weight_kg",  "Снаряжённая масса",        "int",  "кг",   0},
+		{"max_speed",  "Максимальная скорость",    "int",  "км/ч", 0},
+		{"drive_type", "Тип привода",              "enum", "",     classIDs[3]},
+		{"bat_cap",    "Ёмкость батареи",          "real", "кВтч", 0},
+		{"charge_std", "Стандарт зарядки",         "enum", "",     classIDs[2]},
+	}
+	paramIDs := make([]int, len(params))
+	for i, p := range params {
+		var enumPtr interface{}
+		if p.enumClassID != 0 {
+			enumPtr = p.enumClassID
+		}
+		if err := db.QueryRowContext(ctx,
+			`INSERT INTO parameter (designation, name, param_type, measuring_unit, enum_class_id)
+			 VALUES($1,$2,$3,NULLIF($4,''),NULLIF($5::text,'')::int) RETURNING parameter_id`,
+			p.des, p.name, p.ptype, p.unit, enumPtr).Scan(&paramIDs[i]); err != nil {
+			log.Printf("seed: parameter '%s': %v", p.des, err)
+			return nil
+		}
+	}
+
+	// Привязываем параметры к типу 'emobile'
+	for i, pID := range paramIDs {
+		var minV, maxV interface{}
+		switch i {
+		case 0: minV, maxV = 50, 800    // range_km
+		case 1: minV, maxV = 800, 4000  // weight_kg
+		case 2: minV, maxV = 60, 350    // max_speed
+		case 4: minV, maxV = 20, 200    // bat_cap
+		}
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO component_parameter (component_type, parameter_id, order_num, min_val, max_val)
+			 VALUES('emobile',$1,$2,$3,$4) ON CONFLICT DO NOTHING`,
+			pID, i, minV, maxV); err != nil {
+			log.Printf("seed: component_parameter: %v", err)
+		}
+	}
+	log.Printf("seed: PR3 parameters (%d) seeded for emobile", len(params))
 
 	return nil
 }

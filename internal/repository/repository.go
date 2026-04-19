@@ -21,7 +21,7 @@ type CarcassRepository interface {
 	Create(ctx context.Context, c *domain.Carcass) (string, error)
 	Update(ctx context.Context, c *domain.Carcass) error
 	Delete(ctx context.Context, id string) error
-	List(ctx context.Context) ([]*domain.Carcass, error) // каталог
+	List(ctx context.Context) ([]*domain.Carcass, error)
 }
 
 type DoorsRepository interface {
@@ -39,8 +39,6 @@ type WingsRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.Wings, error)
 }
-
-//////////////////////////////////////////////////////////////////////
 
 type ElectronicsRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Electronics, error)
@@ -74,8 +72,6 @@ type WiringRepository interface {
 	List(ctx context.Context) ([]*domain.Wiring, error)
 }
 
-/////////////////////////////////////////////////////////////////////////
-
 type ChargerSystemRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.ChargerSystem, error)
 	CreateTx(ctx context.Context, tx *sqlx.Tx, cs *domain.ChargerSystem) (string, error)
@@ -99,8 +95,6 @@ type ConnectorRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.Connector, error)
 }
-
-//////////////////////////////////////////////////////////////////////
 
 type ChassisRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Chassis, error)
@@ -133,8 +127,6 @@ type BreakSystemRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context) ([]*domain.BreakSystem, error)
 }
-
-/////////////////////////////////////////////////////////////////////////
 
 type BatteryRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Battery, error)
@@ -184,8 +176,6 @@ type EmobileRepository interface {
 	List(ctx context.Context) ([]*domain.Emobile, error)
 }
 
-/////////////////////////////////////////////////////////////////////////
-
 type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) (string, error)
 	GetByID(ctx context.Context, id string) (*domain.User, error)
@@ -195,7 +185,163 @@ type UserRepository interface {
 	List(ctx context.Context) ([]*domain.User, error)
 }
 
-//////////////////////////////////////////////////////////////////////////
+// ── ПР2: Перечисления ─────────────────────────────────────────────
+
+type EnumClassRepository interface {
+	List(ctx context.Context) ([]*domain.EnumClass, error)
+	GetByID(ctx context.Context, id string) (*domain.EnumClass, error)
+	Create(ctx context.Context, ec *domain.EnumClass) (string, error)
+	Update(ctx context.Context, ec *domain.EnumClass) error
+	Delete(ctx context.Context, id string) error
+	// GetValues вызывает SQL-функцию get_enum_values
+	GetValues(ctx context.Context, id string) ([]*domain.EnumPosition, error)
+	// ValidateValue вызывает SQL-функцию validate_enum_value
+	ValidateValue(ctx context.Context, enumClassID, value string) (bool, error)
+}
+
+type EnumPositionRepository interface {
+	List(ctx context.Context) ([]*domain.EnumPosition, error)
+	GetByID(ctx context.Context, id string) (*domain.EnumPosition, error)
+	Create(ctx context.Context, p *domain.EnumPosition) (string, error)
+	Update(ctx context.Context, p *domain.EnumPosition) error
+	Delete(ctx context.Context, id string) error
+}
+
+// ── ПР3: Параметры и реестр ───────────────────────────────────────
+
+type ParameterRepository interface {
+	List(ctx context.Context) ([]*domain.Parameter, error)
+	GetByID(ctx context.Context, id string) (*domain.Parameter, error)
+	Create(ctx context.Context, p *domain.Parameter) (string, error)
+	Update(ctx context.Context, p *domain.Parameter) error
+	Delete(ctx context.Context, id string) error
+}
+
+type ComponentParameterRepository interface {
+	List(ctx context.Context) ([]*domain.ComponentParameter, error)
+	GetByID(ctx context.Context, id string) (*domain.ComponentParameter, error)
+	Create(ctx context.Context, cp *domain.ComponentParameter) (string, error)
+	Update(ctx context.Context, cp *domain.ComponentParameter) error
+	Delete(ctx context.Context, id string) error
+	// GetByType вызывает SQL-функцию get_component_parameters
+	GetByType(ctx context.Context, componentType string) ([]*domain.ComponentParameterFull, error)
+	// CopyFromType вызывает SQL-процедуру copy_component_parameters
+	CopyFromType(ctx context.Context, fromType, toType string) error
+}
+
+type EmobileParameterValueRepository interface {
+	List(ctx context.Context) ([]*domain.EmobileParameterValue, error)
+	GetByID(ctx context.Context, id string) (*domain.EmobileParameterValue, error)
+	Create(ctx context.Context, v *domain.EmobileParameterValue) (string, error)
+	Update(ctx context.Context, v *domain.EmobileParameterValue) error
+	Delete(ctx context.Context, id string) error
+	GetByEmobile(ctx context.Context, emobileID string) ([]*domain.EmobileParameterValue, error)
+}
+
+// ── ПР4: Хозяйственные операции ───────────────────────────────────
+
+type ShdRepository interface {
+	List(ctx context.Context) ([]*domain.SHD, error)
+	GetByID(ctx context.Context, id string) (*domain.SHD, error)
+	Create(ctx context.Context, s *domain.SHD) (string, error)
+	Update(ctx context.Context, s *domain.SHD) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassRepository interface {
+	List(ctx context.Context) ([]*domain.HoClass, error)
+	GetByID(ctx context.Context, id string) (*domain.HoClass, error)
+	Create(ctx context.Context, h *domain.HoClass) (string, error)
+	Update(ctx context.Context, h *domain.HoClass) error
+	Delete(ctx context.Context, id string) error
+	GetTerminal(ctx context.Context) ([]*domain.HoClass, error)
+	GetChildren(ctx context.Context, parentID string) ([]*domain.HoClass, error)
+}
+
+type HoRoleRepository interface {
+	List(ctx context.Context) ([]*domain.HoRole, error)
+	GetByID(ctx context.Context, id string) (*domain.HoRole, error)
+	Create(ctx context.Context, hr *domain.HoRole) (string, error)
+	Update(ctx context.Context, hr *domain.HoRole) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassRoleRepository interface {
+	List(ctx context.Context, hoClassID string) ([]*domain.HoClassRole, error)
+	ListByClass(ctx context.Context, hoClassID string) ([]*domain.HoClassRole, error)
+	Create(ctx context.Context, hcr *domain.HoClassRole) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassParameterRepository interface {
+	List(ctx context.Context, hoClassID string) ([]*domain.HoClassParameter, error)
+	GetByID(ctx context.Context, id string) (*domain.HoClassParameter, error)
+	Create(ctx context.Context, cp *domain.HoClassParameter) (string, error)
+	Update(ctx context.Context, cp *domain.HoClassParameter) error
+	Delete(ctx context.Context, id string) error
+	// GetByHoClass вызывает SQL-функцию get_ho_class_parameters
+	GetByHoClass(ctx context.Context, hoClassID string) ([]*domain.HoClassParameterFull, error)
+	// CopyFromClass выполняет INSERT...SELECT для копирования параметров
+	CopyFromClass(ctx context.Context, fromClassID, toClassID string) error
+}
+
+type DocumentClassRepository interface {
+	List(ctx context.Context) ([]*domain.DocumentClass, error)
+	GetByID(ctx context.Context, id string) (*domain.DocumentClass, error)
+	Create(ctx context.Context, dc *domain.DocumentClass) (string, error)
+	Update(ctx context.Context, dc *domain.DocumentClass) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoClassDocumentRepository interface {
+	ListByClass(ctx context.Context, hoClassID string) ([]*domain.HoClassDocument, error)
+	Create(ctx context.Context, hcd *domain.HoClassDocument) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoInstanceRepository interface {
+	List(ctx context.Context, hoClassID string) ([]*domain.HoInstance, error)
+	GetByID(ctx context.Context, id string) (*domain.HoInstance, error)
+	// Create вызывает SQL-функцию ins_ho
+	Create(ctx context.Context, h *domain.HoInstance) (string, error)
+	Update(ctx context.Context, h *domain.HoInstance) error
+	Delete(ctx context.Context, id string) error
+	// FindByClass вызывает SQL-функцию find_ho_by_class
+	FindByClass(ctx context.Context, hoClassID string) ([]*domain.HoInstanceFull, error)
+}
+
+type HoActorRepository interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoActor, error)
+	// Create вызывает SQL-процедуру set_ho_actor
+	Create(ctx context.Context, ha *domain.HoActor) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoParameterValueRepository interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoParameterValueFull, error)
+	GetByID(ctx context.Context, id string) (*domain.HoParameterValue, error)
+	// Create вызывает SQL-процедуру write_ho_par
+	Create(ctx context.Context, v *domain.HoParameterValue) (string, error)
+	// Update вызывает SQL-процедуру write_ho_par (UPSERT-семантика)
+	Update(ctx context.Context, v *domain.HoParameterValue) error
+	Delete(ctx context.Context, id string) error
+}
+
+type HoDocumentRepository interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoDocument, error)
+	Create(ctx context.Context, d *domain.HoDocument) (string, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type HoPositionRepository interface {
+	ListByHo(ctx context.Context, hoID string) ([]*domain.HoPositionFull, error)
+	// Create вызывает SQL-процедуру add_ho_position
+	Create(ctx context.Context, p *domain.HoPosition) (string, error)
+	Update(ctx context.Context, p *domain.HoPosition) error
+	Delete(ctx context.Context, id string) error
+}
+
+// ── Агрегирующий Repository ──────────────────────────────────────
 
 type Repository struct {
 	Emobile       EmobileRepository
@@ -230,8 +376,31 @@ type Repository struct {
 	Inverter InverterRepository
 	Gearbox  GearboxRepository
 
-	// User
+	// user
 	User UserRepository
+
+	// ПР2
+	EnumClass    EnumClassRepository
+	EnumPosition EnumPositionRepository
+
+	// ПР3
+	Parameter             ParameterRepository
+	ComponentParameter    ComponentParameterRepository
+	EmobileParameterValue EmobileParameterValueRepository
+
+	// ПР4
+	Shd              ShdRepository
+	HoClass          HoClassRepository
+	HoRole           HoRoleRepository
+	HoClassRole      HoClassRoleRepository
+	HoClassParameter HoClassParameterRepository
+	DocumentClass    DocumentClassRepository
+	HoClassDocument  HoClassDocumentRepository
+	HoInstance       HoInstanceRepository
+	HoActor          HoActorRepository
+	HoParameterValue HoParameterValueRepository
+	HoDocument       HoDocumentRepository
+	HoPosition       HoPositionRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -268,7 +437,30 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Inverter: NewInverterPostgres(db),
 		Gearbox:  NewGearboxPostgres(db),
 
-		//User
+		// user
 		User: NewUserPostgres(db),
+
+		// ПР2
+		EnumClass:    NewEnumClassPostgres(db),
+		EnumPosition: NewEnumPositionPostgres(db),
+
+		// ПР3
+		Parameter:             NewParameterPostgres(db),
+		ComponentParameter:    NewComponentParameterPostgres(db),
+		EmobileParameterValue: NewEmobileParameterValuePostgres(db),
+
+		// ПР4
+		Shd:              NewShdPostgres(db),
+		HoClass:          NewHoClassPostgres(db),
+		HoRole:           NewHoRolePostgres(db),
+		HoClassRole:      NewHoClassRolePostgres(db),
+		HoClassParameter: NewHoClassParameterPostgres(db),
+		DocumentClass:    NewDocumentClassPostgres(db),
+		HoClassDocument:  NewHoClassDocumentPostgres(db),
+		HoInstance:       NewHoInstancePostgres(db),
+		HoActor:          NewHoActorPostgres(db),
+		HoParameterValue: NewHoParameterValuePostgres(db),
+		HoDocument:       NewHoDocumentPostgres(db),
+		HoPosition:       NewHoPositionPostgres(db),
 	}
 }

@@ -1,4 +1,4 @@
-/* catalog.js */
+/* catalog.js — с добавлением кнопок ПР2, ПР3 и ПР4 */
 let allPartsData=[],categoryFilter='all',searchText='';
 
 async function loadCatalogData(){
@@ -14,18 +14,15 @@ async function loadCatalogData(){
         }
     }
     if(loadErrors.length){
-        /* Показываем баннер с именами упавших категорий */
         const warn=document.createElement('div');
         warn.style.cssText='position:fixed;bottom:1rem;right:1rem;z-index:9999;'+
             'background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;'+
             'border-radius:.5rem;padding:.75rem 1rem;font-size:.8rem;max-width:360px;'+
             'box-shadow:0 4px 16px rgba(0,0,0,.5)';
-        warn.innerHTML='<strong>⚠ Не удалось загрузить:</strong><br>'+
-            loadErrors.join('<br>');
+        warn.innerHTML='<strong>⚠ Не удалось загрузить:</strong><br>'+loadErrors.join('<br>');
         document.body.appendChild(warn);
         setTimeout(()=>warn.remove(),12000);
     }
-    /* lookup: idField-значение → отображаемое имя */
     const nameFor={};
     for(const cat of CATEGORY_MAP){
         nameFor[cat.idField]={};
@@ -35,7 +32,22 @@ async function loadCatalogData(){
                 :`${cat.label} #${shortId(item[cat.idField])}`;
         }
     }
-    /* info для каждой категории */
+
+    // ── ПР̣3: параметры автомобилей ────────────────────────
+    let paramDefsById={};      // cp_id → {name, param_type, measuring_unit}
+    let paramValsByEmobile={}; // emobile_id → [EmobileParameterValue]
+    try{
+        const [defs,vals]=await Promise.all([
+            api.componentParameter.byType('emobile').catch(()=>[]),
+            api.emobileParam.list().catch(()=>[]),
+        ]);
+        (defs||[]).forEach(d=>{ paramDefsById[String(d.cp_id)]=d; });
+        (vals||[]).forEach(v=>{
+            const eid=String(v.emobile_id);
+            (paramValsByEmobile[eid]=paramValsByEmobile[eid]||[]).push(v);
+        });
+    }catch(_){}
+
     const getInfo={
         powerPoints:   i=>[
             {l:'Двиг',v:nameFor['engine_id']?.[i.engine_id]            ||'?'},
@@ -61,16 +73,33 @@ async function loadCatalogData(){
             {l:'Дв',  v:nameFor['doors_id']?.[i.doors_id]               ||'?'},
             {l:'Кр',  v:nameFor['wings_id']?.[i.wings_id]               ||'?'},
         ],
-        emobiles:      i=>[
-            {l:'СУ',     v:nameFor['power_point_id']?.[i.power_point_id]    ||'?'},
-            {l:'Батарея',v:nameFor['battery_id']?.[i.battery_id]            ||'?'},
-            {l:'Зарядка',v:nameFor['charger_system_id']?.[i.charger_system_id]||'?'},
-            {l:'Шасси',  v:nameFor['chassis_id']?.[i.chassis_id]            ||'?'},
-            {l:'Кузов',  v:nameFor['body_id']?.[i.body_id]                  ||'?'},
-            {l:'Электро',v:nameFor['electronics_id']?.[i.electronics_id]    ||'?'},
-        ],
+        emobiles: i=>{
+            const baseLines=[
+                {l:'СУ',     v:nameFor['power_point_id']?.[i.power_point_id]      ||'?'},
+                {l:'Батарея',v:nameFor['battery_id']?.[i.battery_id]              ||'?'},
+                {l:'Зарядка',v:nameFor['charger_system_id']?.[i.charger_system_id]||'?'},
+                {l:'Шасси',  v:nameFor['chassis_id']?.[i.chassis_id]              ||'?'},
+                {l:'Кузов',  v:nameFor['body_id']?.[i.body_id]                    ||'?'},
+                {l:'Электро',v:nameFor['electronics_id']?.[i.electronics_id]      ||'?'},
+            ];
+            // Приписываем значения параметров ПР̣3 (если есть)
+            const pvList=paramValsByEmobile[String(i.emobile_id)]||[];
+            const paramLines=pvList.map(pv=>{
+                const def=paramDefsById[String(pv.component_parameter_id)];
+                const name=def?def.name:'?';
+                const unit=def&&def.measuring_unit?` ${def.measuring_unit}`:'';
+                let val='—';
+                if(def){
+                    if(def.param_type==='int')       val=pv.val_int!==0?String(pv.val_int):'—';
+                    else if(def.param_type==='str')  val=pv.val_str||'—';
+                    else if(def.param_type==='enum') val=pv.enum_val_id||'—';
+                    else                             val=pv.val_real!==0?String(pv.val_real):'—';
+                }
+                return {l:name, v:val+unit};
+            });
+            return [...baseLines,...paramLines];
+        },
     };
-
     const flat=[];
     for(const cat of CATEGORY_MAP){
         const resolver=getInfo[cat.key]||null;
@@ -78,7 +107,6 @@ async function loadCatalogData(){
             const name=cat.nameField
                 ?(item[cat.nameField]||`${cat.label} #${shortId(item[cat.idField])}`)
                 :`${cat.label} …${shortId(item[cat.idField])}`;
-            /* infoLines — массив {l,v} для составных, строка для листовых */
             const infoLines=resolver?resolver(item):null;
             const infoStr=resolver?infoLines.map(r=>`${r.l}: ${r.v}`).join(' · '):cat.infoFn(item);
             flat.push({id:item[cat.idField],name,category:cat.label,
@@ -89,11 +117,9 @@ async function loadCatalogData(){
     renderCatalog(false,false);
 }
 
-/* ── Рендер ячейки «Информация» ─────────────────────────────── */
 function renderInfoCell(p){
-    if(!p.infoLines) /* листовая деталь */
+    if(!p.infoLines)
         return`<td class="info-cell">${escapeHtml(p.infoStr)}</td>`;
-    /* составная — многострочный блок */
     const lines=p.infoLines.map(r=>
         `<span class="info-line">
             <span class="info-label">${escapeHtml(r.l)}</span>
@@ -104,9 +130,7 @@ function renderInfoCell(p){
 }
 
 function _buildChipsHtml(){
-    /* Всегда показываем все категории из CATEGORY_MAP,
-       даже если в базе нет записей (fix: «Тормозные системы» пропадали) */
-    const allLabels = CATEGORY_MAP.map(c=>c.label);
+    const allLabels=CATEGORY_MAP.map(c=>c.label);
     return['all',...allLabels].map(l=>
         `<span class="filter-chip ${categoryFilter===l?'active':''}" data-cat="${escapeHtml(l)}">
             ${l==='all'?'Все':escapeHtml(l)}</span>`).join('');
@@ -129,12 +153,15 @@ function _buildRowsHtml(isAdmin){
             <i class="fas fa-edit action-icon" style="color:#60a5fa"
                data-action="edit"   data-id="${escapeHtml(p.id)}"
                data-cat="${escapeHtml(p.categoryKey)}" title="Редактировать"></i>
+            ${p.categoryKey==='emobiles'?`<i class="fas fa-sliders-h action-icon" style="color:#a78bfa"
+               data-action="params" data-id="${escapeHtml(p.id)}"
+               data-name="${escapeHtml(p.name)}" title="Параметры (ПР3)"></i>`:''}
             <i class="fas fa-trash-alt action-icon" style="color:#f87171"
                data-action="delete" data-id="${escapeHtml(p.id)}"
                data-cat="${escapeHtml(p.categoryKey)}"
                data-name="${escapeHtml(p.name)}" title="Удалить"></i>
-        </td>`:''}
-    </tr>`).join('');
+        </td>`:''}`
+    ).join('');
 }
 
 function renderCatalog(partial=true,loading=false){
@@ -165,12 +192,22 @@ function renderCatalog(partial=true,loading=false){
             </div>
         </div>
         ${isAdmin?`<div class="toolbar">
-            <button class="btn btn-primary"   id="createCarBtn"><i class="fas fa-car"></i> Создать автомобиль</button>
-            <button class="btn btn-secondary" id="addPartBtn"><i class="fas fa-plus"></i> Добавить деталь</button>
-            <button class="btn btn-secondary" id="createUserBtn" style="margin-left:auto">
-                <i class="fas fa-user-plus"></i> Новый пользователь</button>
-        </div>`:''}
-        <div class="toolbar">
+            <button class="btn btn-primary"   id="createCarBtn">
+                <i class="fas fa-car"></i> Создать автомобиль</button>
+            <button class="btn btn-secondary" id="addPartBtn">
+                <i class="fas fa-plus"></i> Добавить деталь</button>
+            <span style="margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap">
+                <button class="btn btn-secondary" id="enumsBtn" title="ПР2: Справочники перечислений">
+                    <i class="fas fa-list-ul"></i> Справочники</button>
+                <button class="btn btn-secondary" id="paramsBtn" title="ПР3: Параметры изделий">
+                    <i class="fas fa-sliders-h"></i> Параметры</button>
+                <button class="btn btn-secondary" id="hoBtn" title="ПР4: Хозяйственные операции">
+                    <i class="fas fa-exchange-alt"></i> Хоз.операции</button>
+                <button class="btn btn-secondary" id="createUserBtn">
+                    <i class="fas fa-user-plus"></i> Новый пользователь</button>
+            </span>
+        </div>`:''}`+
+        `<div class="toolbar">
             <input type="text" id="searchInput" class="input-dark" style="max-width:320px"
                 placeholder="Поиск по ID или названию…" value="${escapeHtml(searchText)}">
         </div>
@@ -201,13 +238,23 @@ function renderCatalog(partial=true,loading=false){
         app.querySelector('#createCarBtn').addEventListener('click',openWizard);
         app.querySelector('#addPartBtn').addEventListener('click',()=>openPartForm(null,null));
         app.querySelector('#createUserBtn').addEventListener('click',openCreateUserForm);
+        // ── ПР2: Справочники перечислений ──
+        app.querySelector('#enumsBtn').addEventListener('click',openEnumsManager);
+        // ── ПР3: Параметры изделий ──
+        app.querySelector('#paramsBtn').addEventListener('click',openParametersManager);
+        // ── ПР4: Хозяйственные операции ──
+        app.querySelector('#hoBtn').addEventListener('click',openHoOperationsView);
         _attachActions(app,isAdmin);
     }
 }
+
 function _attachActions(app,isAdmin){
     if(!isAdmin)return;
     app.querySelectorAll('[data-action="edit"]').forEach(el=>
         el.addEventListener('click',()=>openPartForm(el.dataset.id,el.dataset.cat)));
     app.querySelectorAll('[data-action="delete"]').forEach(el=>
         el.addEventListener('click',()=>confirmDelete(el.dataset.id,el.dataset.cat,el.dataset.name)));
+    // ПР3: кнопка параметров автомобиля
+    app.querySelectorAll('[data-action="params"]').forEach(el=>
+        el.addEventListener('click',()=>openEmobileParamsForm(el.dataset.id, el.dataset.name)));
 }
